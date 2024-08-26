@@ -1,0 +1,32 @@
+  testing of BPC path for 2-R serial chain:
+  
+  traj.bpc_params.P1 << -0.076, -0.139;
+  traj.bpc_params.P2 << 0.081, -0.138;
+  traj.bpc_params.Po1 << -0.07603184648776493, -0.13400010142090693;
+  traj.bpc_params.Po2 << 0.08096815351223509, -0.13300010142090693;
+  traj.bpc_params.Po << 0.004398846832983613, -0.43661895277842544;
+  traj.bpc_params.Pc2 << 0.08219081709194369, -0.12815189620960923;
+  traj.bpc_params.Pc1 << -0.07731616893600043, -0.1291678642734815;
+
+  traj.bpc_params.r1 = 0.005;
+  traj.bpc_params.r2 = 0.005;
+  traj.bpc_params.R = 0.3181250000000003;
+  traj.bpc_params.theta1 = -2.8881855642235053;
+  traj.bpc_params.theta2 = 2.8881855642235053;
+  traj.bpc_params.thetaC = 0.5068141787325762;
+  
+  BPC-v1 for experiment: suited for the five-bar mechanism and 2-R serial chain
+  traj.bpc_params.P1 << -0.04278215165229538, -0.168;
+  traj.bpc_params.P2 << 0.04278215165229538, -0.168;
+  traj.bpc_params.Po1 << -0.04278215165229538, -0.163;
+  traj.bpc_params.Po2 << 0.04278215165229538, -0.163;
+  traj.bpc_params.Po << 0., -0.19875781250000002;
+  traj.bpc_params.Pc2 << 0.04661857831020053, -0.15979347064592966;
+  traj.bpc_params.Pc1 << -0.04661857831020053, -0.15979347064592966;
+
+  traj.bpc_params.r1 = 0.005;
+  traj.bpc_params.r2 = 0.005;
+  traj.bpc_params.R = 0.060757812500000036;
+  traj.bpc_params.theta1 = -2.2669953208315845;
+  traj.bpc_params.theta2 = 2.2669953208315845;
+  traj.bpc_params.thetaC = 1.749194665516418;
