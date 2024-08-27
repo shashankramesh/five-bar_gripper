@@ -27,6 +27,14 @@ const std::map<int, int> servo_bus_map ={
   {4,1}
 }; // TODO: check ids and bus number, map to correct finger
 
+void orderResponse(std::vector<MoteusResponse> resp_in, std::vector<MoteusResponse>& resp_out)
+{
+  for(int jj = 0; jj < 4; jj++)
+  {
+    resp_out[int(resp_in[jj].id) - 1] = resp_in[jj];
+  }
+}
+
 int main(int argc, char** argv)
 {
   Pi3HatInterface pi3_interface;
@@ -45,29 +53,30 @@ int main(int argc, char** argv)
   double psi_cmd_l, psim_l, psi_feed_l, psim_feed_l;
   double phi_cmd_r, phim_r, phi_feed_r, phim_feed_r;
   double psi_cmd_r, psim_r, psi_feed_r, psim_feed_r;
+  Matrix<double, 2, 1> P_l, P_r;
 
   // Dimensions of right finger
   Matrix<double, 2, 1> A0r, B0r, C0r, D0r, F0r, P0r;
   Matrix<double, 2, 6> dim_right_finger;
   Vector<double, 6> conf_feed_r, conf_cmd_r;
 
-  double phi_offset_r = -61*M_PI/36; //TODO: set these
-  double psi_offset_r = 13*M_PI/36; //TODO: set these
-  int phi_sign_r = -1; // TODO: set these
-  int psi_sign_r = 1; // TODO: set these
+  double phi_offset_r = 2.02255;
+  double psi_offset_r = 0.34228;
+  int phi_sign_r = -1;
+  int psi_sign_r = 1;
 
   A0r << 0.015, -0.045;
-  B0r << -0.040919949196745915, 0;
-  C0r << 0.026909920860331303, -0.021713086177873948;
-  D0r << -0.038931473927022224, 0.011670701578338173;
-  F0r << -0.03131683587683813, -0.03619220463744048;
-  P0r << -0.0471521851343047, 0.04999999999992947;
+  B0r << 0.040919949196745915, 0;
+  C0r << -0.03282476284977254, -0.041606786610356335;
+  D0r << 0.04304300866986588, 0.011646970752102255;
+  F0r << 0.026687870426209, -0.03397484373490171;
+  P0r << 0.0101739395037219, 0.0520899255487229;
 
   // Setting up five-bar kinematics
   dim_right_finger << A0r(0), B0r(0), C0r(0), D0r(0), F0r(0), P0r(0),
           A0r(1), B0r(1), C0r(1), D0r(1), F0r(1), P0r(1),
 
-  cout << "Right finger dim: " << endl << dim_left_finger << endl;
+  cout << "Right finger dim: " << endl << dim_right_finger << endl;
 
   FiveBarKinematics right_finger_kinematics(dim_right_finger, phi_offset_r, psi_offset_r, phi_sign_r, psi_sign_r);
 
@@ -76,17 +85,17 @@ int main(int argc, char** argv)
   Matrix<double, 2, 6> dim_left_finger;
   Vector<double, 6> conf_feed_l, conf_cmd_l;
 
-  double phi_offset_l = -61*M_PI/36; //TODO: set these
-  double psi_offset_l = 13*M_PI/36; //TODO: set these
-  int phi_sign_l = -1; // TODO: set these
-  int psi_sign_l = 1; // TODO: set these
+  double phi_offset_l = -2.02255;
+  double psi_offset_l = -0.34228;
+  int phi_sign_l = 1;
+  int psi_sign_l = -1;
 
-  A0l << 0.015, -0.045;
-  B0l << 0.04091994919674591, 0;
-  C0l << -0.02690992086033131, -0.02171308617787395;
-  D0l << 0.038931473927022213, 0.011670701578338172;
-  F0l << 0.03131683587683813, -0.03619220463744048;
-  P0l << 0.0471521851343047, 0.04999999999992947;
+  A0l << -0.015, -0.045;
+  B0l << -0.040919949196745915, 0;
+  C0l << 0.03282476284977254, -0.041606786610356335;
+  D0l << -0.04304300866986588, 0.011646970752102255;
+  F0l << -0.026687870426209, -0.03397484373490171;
+  P0l << -0.0101739395037219, 0.0520899255487229;
 
   // Setting up five-bar kinematics
   dim_left_finger << A0l(0), B0l(0), C0l(0), D0l(0), F0l(0), P0l(0),
@@ -98,7 +107,7 @@ int main(int argc, char** argv)
 
   // Setting up motor commands
   cmds.resize(4);
-  cmds[0].id = 1; // TODO: check id
+  cmds[0].id = 1;
   cmds[0].mode = 10; // Position mode
   cmds[0].position = 0.0;
   cmds[0].velocity = 0.0;
@@ -107,7 +116,7 @@ int main(int argc, char** argv)
   cmds[0].kd_scale = 1;
   cmds[0].watchdog_timeout = 0;
 
-  cmds[1].id = 2; // TODO: check id
+  cmds[1].id = 2;
   cmds[1].mode = 10; // Position mode
   cmds[1].position = 0.0;
   cmds[1].velocity = 0.0;
@@ -116,7 +125,7 @@ int main(int argc, char** argv)
   cmds[1].kd_scale = 1;
   cmds[1].watchdog_timeout = 0;
 
-  cmds[2].id = 3; // TODO: check id
+  cmds[2].id = 3;
   cmds[2].mode = 10; // Position mode
   cmds[2].position = 0.0;
   cmds[2].velocity = 0.0;
@@ -125,7 +134,7 @@ int main(int argc, char** argv)
   cmds[2].kd_scale = 1;
   cmds[2].watchdog_timeout = 0;
 
-  cmds[3].id = 4; // TODO: check id
+  cmds[3].id = 4;
   cmds[3].mode = 10; // Position mode
   cmds[3].position = 0.0;
   cmds[3].velocity = 0.0;
@@ -145,6 +154,7 @@ int main(int argc, char** argv)
   auto timeD = duration_cast<microseconds>(high_resolution_clock::now() - ti);
 
 // time <= total_time
+  resp.resize(4);
   while(true)
   {
 
@@ -152,19 +162,19 @@ int main(int argc, char** argv)
     time = timeD.count()*1e-6;
 
     // Feedback
-    resp = pi3_interface.read();
+    orderResponse(pi3_interface.read(), resp);
     
-    phim_feed_r = resp[1].position; //TODO: check mappings!
-    psim_feed_r = resp[0].position; //TODO: check mappings!
-    phim_feed_l = resp[3].position; //TODO: check mappings!
-    psim_feed_l = resp[4].position; //TODO: check mappings!
+    phim_feed_r = resp[1].position;
+    psim_feed_r = resp[0].position;
+    phim_feed_l = resp[3].position;
+    psim_feed_l = resp[2].position;
     
     right_finger_kinematics.getRelativeAngles(phim_feed_r, psim_feed_r, phi_feed_r, psi_feed_r);
     left_finger_kinematics.getRelativeAngles(phim_feed_l, psim_feed_l, phi_feed_l, psi_feed_l);
 
-    // left finger: 1, right finger: -1
-    right_finger_kinematics.forwardKinematics(phi_feed_r, psi_feed_r, -1, conf_feed_r);
-    left_finger_kinematics.forwardKinematics(phi_feed_l, psi_feed_l, 1, conf_feed_l);
+    // left finger: -1, right finger: 1
+    right_finger_kinematics.forwardKinematics(phi_feed_r, psi_feed_r, 1, conf_feed_r);
+    left_finger_kinematics.forwardKinematics(phi_feed_l, psi_feed_l, -1, conf_feed_l);
     
     P_r << conf_feed_r(4), conf_feed_r(5);
     P_l << conf_feed_l(4), conf_feed_l(5);
@@ -175,6 +185,10 @@ int main(int argc, char** argv)
     left_finger_kinematics.inverseKinematics(P_l, -1, 1, conf_cmd_l);
     
     // Command
+    
+    right_finger_kinematics.getMotorAngles(conf_cmd_r(0), conf_cmd_r(1), phim_r, psim_r);
+    left_finger_kinematics.getMotorAngles(conf_cmd_l(0), conf_cmd_l(1), phim_l, psim_l);
+    
     pi3_interface.stop();
     
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -190,6 +204,15 @@ int main(int argc, char** argv)
       << "Right phi feed: " << phi_feed_r << endl
       << "Right psi feed: " << psi_feed_r << endl
       << std::endl;
+      
+    std::cout << "Left phi cmd: " << phim_l << endl;
+    std::cout << "Left phi feed: " << phim_feed_l << endl;
+    std::cout << "Left psi cmd: " << psim_l << endl;
+    std::cout << "Left psi cmd: " << psim_feed_l << endl;
+    std::cout << "Right phi cmd: " << phim_r << endl;
+    std::cout << "Right phi feed: " << phim_feed_r << endl;
+    std::cout << "Right psi cmd: " << psim_r << endl;
+    std::cout << "Right psi feed: " << psim_feed_r << endl;
  
   }
   pi3_interface.stop();
