@@ -11,6 +11,7 @@ include_directories(/opt/vc/include)
 link_directories(/opt/vc/lib)
 
 add_subdirectory(src/kinematics)
+add_subdirectory(src/tests)
 #add_subdirectory(src/trajectory_planner)
 #add_subdirectory(src/power_monitor)
 

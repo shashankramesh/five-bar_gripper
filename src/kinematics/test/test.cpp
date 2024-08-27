@@ -24,7 +24,7 @@ int main(void)
 
   cout << "Five bar dim: " << endl << dim5bar << endl;
 
-  FiveBarKinematics five_bar_kinematics(dim5bar, 0, 0);
+  FiveBarKinematics five_bar_kinematics(dim5bar, 0, 0, 1, 1);
 
   Vector<double, 6> result;
   bool res;

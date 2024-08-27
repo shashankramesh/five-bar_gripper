@@ -1,7 +1,7 @@
 /*
- * file: test_position_signs.cpp
+ * file: test_FK.cpp
  *
- * Created: 29 Nov, 2022
+ * Created: 27 Aug, 2024
  * Author: Shashank Ramesh
  */
 
@@ -22,8 +22,10 @@ using namespace std::chrono;
 
 const std::map<int, int> servo_bus_map ={
   {1,1},
-  {2,1}
-};
+  {2,1},
+  {3,1},
+  {4,1}
+}; // TODO: check ids and bus number, map to correct finger
 
 int main(int argc, char** argv)
 {
@@ -37,36 +39,66 @@ int main(int argc, char** argv)
   std::vector<uint8_t> resp_buffer;
   resp_buffer.reserve(1024);
 
-  // Dimensions of the five-bar mechanism
-  Matrix<double, 2, 1> A0, B0, C0, D0, F0, P0;
-  Matrix<double, 2, 6> dim5bar;
-  Vector<double, 6> conf_feed;
-
   double time;
   double total_time;
-  double phi_cmd, phim, phi_feed, phim_feed;
-  double psi_cmd, psim, psi_feed, psim_feed;
-  double phi_offset = -61*M_PI/36;
-  double psi_offset = 13*M_PI/36;
+  double phi_cmd_l, phim_l, phi_feed_l, phim_feed_l;
+  double psi_cmd_l, psim_l, psi_feed_l, psim_feed_l;
+  double phi_cmd_r, phim_r, phi_feed_r, phim_feed_r;
+  double psi_cmd_r, psim_r, psi_feed_r, psim_feed_r;
 
-  A0 << 0.12, 0;
-  B0 << 0, 0;
-  C0 << 0.09216732905642444, -0.039749173530376616;
-  D0 << -0.011227449650384648, -0.02407734347492251;
-  F0 << 0.027234061360222564, -0.06273044035186855;
-  P0 << 0.10818369270155971, -0.17033426671218643;
+  // Dimensions of right finger
+  Matrix<double, 2, 1> A0r, B0r, C0r, D0r, F0r, P0r;
+  Matrix<double, 2, 6> dim_right_finger;
+  Vector<double, 6> conf_feed_r;
+
+  double phi_offset_r = -61*M_PI/36; //TODO: set these
+  double psi_offset_r = 13*M_PI/36; //TODO: set these
+  int phi_sign_r = -1; // TODO: set these
+  int psi_sign_r = 1; // TODO: set these
+
+  A0r << 0.015, -0.045;
+  B0r << -0.040919949196745915, 0;
+  C0r << 0.026909920860331303, -0.021713086177873948;
+  D0r << -0.038931473927022224, 0.011670701578338173;
+  F0r << -0.03131683587683813, -0.03619220463744048;
+  P0r << -0.0471521851343047, 0.04999999999992947;
 
   // Setting up five-bar kinematics
-  dim5bar << A0(0), B0(0), C0(0), D0(0), F0(0), P0(0),
-          A0(1), B0(1), C0(1), D0(1), F0(1), P0(1),
+  dim_right_finger << A0r(0), B0r(0), C0r(0), D0r(0), F0r(0), P0r(0),
+          A0r(1), B0r(1), C0r(1), D0r(1), F0r(1), P0r(1),
 
-  cout << "Five bar dim: " << endl << dim5bar << endl;
+  cout << "Right finger dim: " << endl << dim_right_finger << endl;
 
-  FiveBarKinematics five_bar_kinematics(dim5bar, phi_offset, psi_offset);
+  FiveBarKinematics right_finger_kinematics(dim_right_finger, phi_offset_r, psi_offset_r, phi_sign_r, psi_sign_r);
+
+  // Dimensions of left finger
+  Matrix<double, 2, 1> A0l, B0l, C0l, D0l, F0l, P0l;
+  Matrix<double, 2, 6> dim_left_finger;
+  Vector<double, 6> conf_feed_l;
+
+  double phi_offset_l = -61*M_PI/36; //TODO: set these
+  double psi_offset_l = 13*M_PI/36; //TODO: set these
+  int phi_sign_l = -1; // TODO: set these
+  int psi_sign_l = 1; // TODO: set these
+
+  A0l << 0.015, -0.045;
+  B0l << 0.04091994919674591, 0;
+  C0l << -0.02690992086033131, -0.02171308617787395;
+  D0l << 0.038931473927022213, 0.011670701578338172;
+  F0l << 0.03131683587683813, -0.03619220463744048;
+  P0l << 0.0471521851343047, 0.04999999999992947;
+
+  // Setting up five-bar kinematics
+  dim_left_finger << A0l(0), B0l(0), C0l(0), D0l(0), F0l(0), P0l(0),
+          A0l(1), B0l(1), C0l(1), D0l(1), F0l(1), P0l(1),
+
+  cout << "Left finger dim: " << endl << dim_left_finger << endl;
+
+  FiveBarKinematics left_finger_kinematics(dim_left_finger, phi_offset_l, psi_offset_l, phi_sign_l, psi_sign_l);
 
   // Setting up motor commands
-  cmds.resize(2);
-  cmds[0].id = 1;
+  cmds.resize(4);
+  cmds[0].id = 1; // TODO: check id
   cmds[0].mode = 10; // Position mode
   cmds[0].position = 0.0;
   cmds[0].velocity = 0.0;
@@ -75,7 +107,7 @@ int main(int argc, char** argv)
   cmds[0].kd_scale = 1;
   cmds[0].watchdog_timeout = 0;
 
-  cmds[1].id = 2;
+  cmds[1].id = 2; // TODO: check id
   cmds[1].mode = 10; // Position mode
   cmds[1].position = 0.0;
   cmds[1].velocity = 0.0;
@@ -83,6 +115,24 @@ int main(int argc, char** argv)
   cmds[1].kp_scale = 1;
   cmds[1].kd_scale = 1;
   cmds[1].watchdog_timeout = 0;
+
+  cmds[2].id = 3; // TODO: check id
+  cmds[2].mode = 10; // Position mode
+  cmds[2].position = 0.0;
+  cmds[2].velocity = 0.0;
+  cmds[2].feedforward_torque = 0;
+  cmds[2].kp_scale = 1;
+  cmds[2].kd_scale = 1;
+  cmds[2].watchdog_timeout = 0;
+
+  cmds[3].id = 4; // TODO: check id
+  cmds[3].mode = 10; // Position mode
+  cmds[3].position = 0.0;
+  cmds[3].velocity = 0.0;
+  cmds[3].feedforward_torque = 0;
+  cmds[3].kp_scale = 1;
+  cmds[3].kd_scale = 1;
+  cmds[3].watchdog_timeout = 0;
 
   // Start all motors in stopped mode to clear all faults
   pi3_interface.stop();
@@ -104,19 +154,27 @@ int main(int argc, char** argv)
     // Feedback
     resp = pi3_interface.read();
     
-    phim_feed = resp[0].position;
-    psim_feed = resp[1].position;
+    phim_feed_r = resp[1].position; //TODO: check mappings!
+    psim_feed_r = resp[0].position; //TODO: check mappings!
+    phim_feed_l = resp[3].position; //TODO: check mappings!
+    psim_feed_l = resp[4].position; //TODO: check mappings!
     
-    five_bar_kinematics.getRelativeAngles(phim_feed, psim_feed, phi_feed, psi_feed);
+    right_finger_kinematics.getRelativeAngles(phim_feed_r, psim_feed_r, phi_feed_r, psi_feed_r);
+    left_finger_kinematics.getRelativeAngles(phim_feed_l, psim_feed_l, phi_feed_l, psi_feed_l);
 
-    five_bar_kinematics.forwardKinematics(phi_feed, psi_feed, -1, conf_feed);
+    // left finger: 1, right finger: -1
+    right_finger_kinematics.forwardKinematics(phi_feed_r, psi_feed_r, -1, conf_feed_r);
+    left_finger_kinematics.forwardKinematics(phi_feed_l, psi_feed_l, 1, conf_feed_l);
     
     // Command
     pi3_interface.stop();
     
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     
-    std::cout << " Configuration: " << conf_feed
+    std::cout << " Left finger configuration: " << conf_feed_l
+      << std::endl;
+
+    std::cout << " Right finger configuration: " << conf_feed_r
       << std::endl;
  
   }

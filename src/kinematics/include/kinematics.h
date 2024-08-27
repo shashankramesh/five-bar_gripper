@@ -9,7 +9,7 @@ using namespace std;
 class FiveBarKinematics
 {
   public:
-    FiveBarKinematics(Matrix<double, 2, 6> fivebardim, double phi_offset, double psi_offset)
+    FiveBarKinematics(Matrix<double, 2, 6> fivebardim, double phi_offset, double psi_offset, double phi_s, double psi_s)
     {
       A0 = fivebardim(all, 0);
       B0 = fivebardim(all, 1);
@@ -35,6 +35,9 @@ class FiveBarKinematics
       phi_ref = phi_offset;
       psi_ref = psi_offset;
 
+      phi_sign = phi_s;
+      psi_sign = psi_s;
+
     }
 
     ~FiveBarKinematics()
@@ -43,14 +46,14 @@ class FiveBarKinematics
 
     void getRelativeAngles(double phim, double psim, double& phi, double& psi)
     {
-      phi = phim - phi_ref;
-      psi = psim - psi_ref;
+      phi = ((double)phi_sign)*phim - phi_ref;
+      psi = ((double)psi_sign)*psim - psi_ref;
     }
     
     void getMotorAngles(double phi, double psi, double& phim, double& psim)
     {
-      phim = phi + phi_ref;
-      psim = psi + psi_ref;
+      phim = ((double)phi_sign)*(phi + phi_ref);
+      psim = ((double)psi_sign)*(psi + psi_ref);
     }
 
     /*
@@ -235,7 +238,7 @@ class FiveBarKinematics
     Matrix<double, 2, 2> mat1, mat2, mat3, mat4;
 
     double alpha, beta, gamma, theta, rho, psi, phi, den, FClen, FDlen;
-    double CFD, phi_ref, psi_ref;
+    double CFD, phi_ref, psi_ref, phi_sign, psi_sign;
 
     inline double dot(Matrix<double, 2, 1> v1, Matrix<double, 2, 1> v2)
     {
