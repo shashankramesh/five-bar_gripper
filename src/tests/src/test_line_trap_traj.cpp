@@ -32,13 +32,16 @@ void orderResponse(std::vector<MoteusResponse> resp_in, std::vector<MoteusRespon
   }
 }
 
-void p2p(double joint_ini_right_finger[2], double joint_fin_right_finger[2], double joint_ini_left_finger[2], double joint_fin_left_finger[2], double p2p_time)
+void p2p(double joint_ini_right_finger[2], double joint_fin_right_finger[2], double joint_ini_left_finger[2], double joint_fin_left_finger[2], double p2p_time,
+        FiveBarKinematics& right_finger_kinematics, FiveBarKinematics& left_finger_kinematics, Pi3HatInterface& pi3_interface, 
+        std::vector<MoteusCommand>& cmds, std::vector<MoteusResponse>& resp)
 {
   double phi_cmd_l, phim_cmd_l, phi_feed_l, phim_feed_l;
   double psi_cmd_l, psim_cmd_l, psi_feed_l, psim_feed_l;
   double phi_cmd_r, phim_cmd_r, phi_feed_r, phim_feed_r;
   double psi_cmd_r, psim_cmd_r, psi_feed_r, psim_feed_r;
   Vector<double, 6> conf_cmd_r, conf_cmd_l;
+  Vector<double, 6> conf_feed_r, conf_feed_l;
 
   auto ti = high_resolution_clock::now();
   auto timeD = duration_cast<microseconds>(high_resolution_clock::now() - ti);
@@ -79,9 +82,9 @@ void p2p(double joint_ini_right_finger[2], double joint_fin_right_finger[2], dou
     cmds[2].position = psim_cmd_l; //TODO: check these
 
     // Uncommet to run
-    //pi3_interface.write(cmds);
+    pi3_interface.write(cmds);
 
-    pi3_interface.stop();
+    //pi3_interface.stop();
 
     right_finger_kinematics.forwardKinematics(phi_cmd_r, psi_cmd_r, 1, conf_cmd_r);
     left_finger_kinematics.forwardKinematics(phi_cmd_l, psi_cmd_l, -1, conf_cmd_l);
@@ -104,7 +107,9 @@ void p2p(double joint_ini_right_finger[2], double joint_fin_right_finger[2], dou
 }
 
 void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r[2], double& path_time_r, double& n_r, 
-					Vector<double, 2>& pI_l, Vector<double, 2>& pF_l, double pm_l[2], double& path_time_l, double& n_l)
+					Vector<double, 2>& pI_l, Vector<double, 2>& pF_l, double pm_l[2], double& path_time_l, double& n_l,
+          FiveBarKinematics& right_finger_kinematics, FiveBarKinematics& left_finger_kinematics, Pi3HatInterface& pi3_interface, 
+          std::vector<MoteusCommand>& cmds, std::vector<MoteusResponse>& resp)
 {
   Vector<double, 2> pd_r, P_r, pd_l, P_l;
   pd_r = pF_r - pI_r;
@@ -151,17 +156,17 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
     right_finger_kinematics.getRelativeAngles(phim_feed_r, psim_feed_r, phi_feed_r, psi_feed_r);
     left_finger_kinematics.getRelativeAngles(phim_feed_l, psim_feed_l, phi_feed_l, psi_feed_l);
 
-    ni_r = int(floor(time/path_time_r));
-    ni_l = int(floor(time/path_time_l));
     if(time <= total_time_r)
+    {
+      ni_r = int(floor(time/path_time_r));
 	    traj_r.trapezoidalTrajectory(time - ni_r*path_time_r, s_r);
-	else
-		s_r = 1;
+    }
     if(time <= total_time_l)
-	    traj_l.trapezoidalTrajectory(time - ni_r*path_time_r, s_l);
-	else
-		s_l = 1;
-
+    {
+      ni_l = int(floor(time/path_time_l));
+      traj_l.trapezoidalTrajectory(time - ni_r*path_time_r, s_l);
+    }
+      
     if(ni_r % 2 == 0)
       traj_r.straightLinePath(pI_r, pF_r, s_r, P_r);
     else
@@ -186,9 +191,9 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
     cmds[2].position = psim_cmd_l; //TODO: check these
 
     // Uncommet to run
-    //pi3_interface.write(cmds);
+    pi3_interface.write(cmds);
 
-    pi3_interface.stop();
+    //pi3_interface.stop();
 
     right_finger_kinematics.forwardKinematics(phi_feed_r, psi_feed_r, 1, conf_feed_r);
     left_finger_kinematics.forwardKinematics(phi_feed_l, psi_feed_l, -1, conf_feed_l);
@@ -210,6 +215,40 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
   }
 } 
 
+void getCurrentPos(double& phi_feed_r, double& psi_feed_r, double& phi_feed_l, double& psi_feed_l, FiveBarKinematics& left_finger_kinematics, FiveBarKinematics& right_finger_kinematics, Pi3HatInterface& pi3_interface, 
+std::vector<MoteusCommand>& cmds, std::vector<MoteusResponse>& resp)
+{
+  double phim_feed_l;
+  double psim_feed_l;
+  double phim_feed_r;
+  double psim_feed_r;
+
+  auto ti = high_resolution_clock::now();
+  auto timeD = duration_cast<microseconds>(high_resolution_clock::now() - ti);
+
+  double time = 0;
+
+  while(time <= 0.5)  
+  {
+    timeD = duration_cast<microseconds>(high_resolution_clock::now() - ti);
+    time = timeD.count()*1e-6;
+
+    orderResponse(pi3_interface.read(), resp);
+
+    phim_feed_r = resp[1].position;
+    psim_feed_r = resp[0].position;
+    phim_feed_l = resp[3].position;
+    psim_feed_l = resp[2].position;
+    
+    right_finger_kinematics.getRelativeAngles(phim_feed_r, psim_feed_r, phi_feed_r, psi_feed_r);
+    left_finger_kinematics.getRelativeAngles(phim_feed_l, psim_feed_l, phi_feed_l, psi_feed_l);
+        
+    pi3_interface.stop();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));  
+  }
+}
+
 int main(void)
 {
   //Pi3hat initialize
@@ -219,6 +258,8 @@ int main(void)
 
   std::vector<MoteusCommand> cmds;
   std::vector<MoteusResponse> resp;
+  
+  double phi_feed_r, psi_feed_r, phi_feed_l, psi_feed_l;
   
   // Dimensions of right finger
   Matrix<double, 2, 1> A0r, B0r, C0r, D0r, F0r, P0r;
@@ -277,8 +318,8 @@ int main(void)
   cmds[0].position = 0.0;
   cmds[0].velocity = 0.0;
   cmds[0].feedforward_torque = 0;
-  cmds[0].kp_scale = 1;
-  cmds[0].kd_scale = 1;
+  cmds[0].kp_scale = 4;
+  cmds[0].kd_scale = 2;
   cmds[0].watchdog_timeout = 0;
 
   cmds[1].id = 2;
@@ -286,8 +327,8 @@ int main(void)
   cmds[1].position = 0.0;
   cmds[1].velocity = 0.0;
   cmds[1].feedforward_torque = 0;
-  cmds[1].kp_scale = 1;
-  cmds[1].kd_scale = 1;
+  cmds[1].kp_scale = 4;
+  cmds[1].kd_scale = 2;
   cmds[1].watchdog_timeout = 0;
 
   cmds[2].id = 3;
@@ -295,8 +336,8 @@ int main(void)
   cmds[2].position = 0.0;
   cmds[2].velocity = 0.0;
   cmds[2].feedforward_torque = 0;
-  cmds[2].kp_scale = 1;
-  cmds[2].kd_scale = 1;
+  cmds[2].kp_scale = 4;
+  cmds[2].kd_scale = 2;
   cmds[2].watchdog_timeout = 0;
 
   cmds[3].id = 4;
@@ -304,8 +345,8 @@ int main(void)
   cmds[3].position = 0.0;
   cmds[3].velocity = 0.0;
   cmds[3].feedforward_torque = 0;
-  cmds[3].kp_scale = 1;
-  cmds[3].kd_scale = 1;
+  cmds[3].kp_scale = 4;
+  cmds[3].kd_scale = 2;
   cmds[3].watchdog_timeout = 0;
   
   Vector<double, 2> pI_r, pF_r, pI_l, pF_l;
@@ -315,14 +356,42 @@ int main(void)
   pI_l << -0.01, 0.04;
   pF_l << -0.04, 0.04;
 
-  double pm_r = {1, -1};
-  double pm_l = {-1, 1};
-  double path_time_r = 0;
-  double path_time_l = 0;
-  double n_r = 1;
-  double n_l = 1;
+  double pm_r[2] = {1, -1};
+  double pm_l[2] = {-1, 1};
+  double path_time_r = 2;
+  double path_time_l = 2;
+  double n_r = 4;
+  double n_l = 4;
 
-  linear_motion(pI_r, pF_r, pm_r, path_time_r, n_r, pI_l, pF_l, pm_l, path_time_l, n_l);
+  // Start all motors in stopped mode to clear all faults
+  pi3_interface.stop();
+  // Wait for the stop command to be sent 
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+  //std::cout << "ok00" << std::endl;
+  resp.resize(4);
+
+  getCurrentPos(phi_feed_r, psi_feed_r, phi_feed_l, psi_feed_l, left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  
+  right_finger_kinematics.inverseKinematics(pI_r, pm_r[0], pm_r[1], conf_cmd_r);
+  left_finger_kinematics.inverseKinematics(pI_l, pm_l[0], pm_l[1], conf_cmd_l);
+
+  double joint_ini_right_finger[2] = {phi_feed_r, psi_feed_r};
+  double joint_fin_right_finger[2] = {conf_cmd_r(0), conf_cmd_r(1)};
+  double joint_ini_left_finger[2] = {phi_feed_l, psi_feed_l};
+  double joint_fin_left_finger[2] = {conf_cmd_l(0), conf_cmd_l(1)};
+  double p2p_time = 3;
+
+  std::cout << "p2p" << std::endl;
+
+  p2p(joint_ini_right_finger, joint_fin_right_finger, joint_ini_left_finger, joint_fin_left_finger, p2p_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+
+  log_file << endl;
+  std::cout << "linear" << std::endl;
+
+  linear_motion(pI_r, pF_r, pm_r, path_time_r, n_r, pI_l, pF_l, pm_l, path_time_l, n_l, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
   pi3_interface.stop();
 
