@@ -15,7 +15,7 @@
 
 using namespace std::chrono;
 
-ofstream log_file("test.csv");
+ofstream log_file("../verify_codes/test.csv");
 
 const std::map<int, int> servo_bus_map ={
   {1,1},
@@ -82,9 +82,9 @@ void p2p(double joint_ini_right_finger[2], double joint_fin_right_finger[2], dou
     cmds[2].position = psim_cmd_l; //TODO: check these
 
     // Uncommet to run
-    pi3_interface.write(cmds);
+    //pi3_interface.write(cmds);
 
-    //pi3_interface.stop();
+    pi3_interface.stop();
 
     right_finger_kinematics.forwardKinematics(phi_cmd_r, psi_cmd_r, 1, conf_cmd_r);
     left_finger_kinematics.forwardKinematics(phi_cmd_l, psi_cmd_l, -1, conf_cmd_l);
@@ -191,9 +191,9 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
     cmds[2].position = psim_cmd_l; //TODO: check these
 
     // Uncommet to run
-    pi3_interface.write(cmds);
+    //pi3_interface.write(cmds);
 
-    //pi3_interface.stop();
+    pi3_interface.stop();
 
     right_finger_kinematics.forwardKinematics(phi_feed_r, psi_feed_r, 1, conf_feed_r);
     left_finger_kinematics.forwardKinematics(phi_feed_l, psi_feed_l, -1, conf_feed_l);
@@ -249,7 +249,7 @@ std::vector<MoteusCommand>& cmds, std::vector<MoteusResponse>& resp)
   }
 }
 
-void output_mode_switch(char op_mode, FiveBarKinematics& right_finger_kinematics, FiveBarKinematics& left_finger_kinematics, Pi3HatInterface& pi3_interface, 
+void output_mode_switch(const char* op_mode, FiveBarKinematics& right_finger_kinematics, FiveBarKinematics& left_finger_kinematics, Pi3HatInterface& pi3_interface, 
           std::vector<MoteusCommand>& cmds, std::vector<MoteusResponse>& resp)
 {
   // set phi_ini
@@ -258,16 +258,20 @@ void output_mode_switch(char op_mode, FiveBarKinematics& right_finger_kinematics
   double phi_cmd_r, phi_feed_r;
   double psi_cmd_r, psi_feed_r;
 
-  double joint_ini_right_finger[2] = {phi_feed_r, psi_feed_r};
-  double joint_fin_right_finger[2] = {conf_cmd_r(0), conf_cmd_r(1)};
-  double joint_ini_left_finger[2] = {phi_feed_l, psi_feed_l};
-  double joint_fin_left_finger[2] = {conf_cmd_l(0), conf_cmd_l(1)};
+  double joint_ini_right_finger[2];
+  double joint_fin_right_finger[2];
+  double joint_ini_left_finger[2];
+  double joint_fin_left_finger[2];
   double p2p_time = 3;
+  
+  string in_an, phi_r, psi_r, phi_l, psi_l;
+
+  fstream angles;
 
   if(op_mode == "gripp")
-    angles.open("op_switch/sense_to_gripp.csv", ios::in);
+    angles.open("../verify_codes/sense_to_gripp.csv", ios::in);
   else
-    angles.open("op_switch/gripp_to_sense.csv", ios::in);
+    angles.open("../verify_codes/gripp_to_sense.csv", ios::in);
 
   getCurrentPos(phi_feed_r, psi_feed_r, phi_feed_l, psi_feed_l, left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
 
@@ -292,7 +296,6 @@ void output_mode_switch(char op_mode, FiveBarKinematics& right_finger_kinematics
     
     cout << "phi_r: " << joint_fin_right_finger[0] << ", psi_r: " << joint_fin_right_finger[1]
          << "phi_l: " << joint_fin_left_finger[0] << ", psi_l: " << joint_fin_right_finger[1] << endl;
-    j++;
   
     p2p(joint_ini_right_finger, joint_fin_right_finger, joint_ini_left_finger, joint_fin_left_finger, p2p_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
@@ -424,7 +427,6 @@ int main(void)
   // Wait for the stop command to be sent 
   std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-  //std::cout << "ok00" << std::endl;
   resp.resize(4);
 
   getCurrentPos(phi_feed_r, psi_feed_r, phi_feed_l, psi_feed_l, left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
@@ -444,10 +446,11 @@ int main(void)
 
   p2p(joint_ini_right_finger, joint_fin_right_finger, joint_ini_left_finger, joint_fin_left_finger, p2p_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
-  log_file << endl;
   std::cout << "linear" << std::endl;
 
   linear_motion(pI_r, pF_r, pm_r, path_time_r, n_r, pI_l, pF_l, pm_l, path_time_l, n_l, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+
+  std::cout << "output mode switch" << std::endl;
 
   output_mode_switch("gripp", right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 

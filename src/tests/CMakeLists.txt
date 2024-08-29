@@ -25,6 +25,14 @@ add_executable(test_line_trap_traj
   )
 target_link_libraries(test_line_trap_traj m pthread bcm_host)
 
+add_executable(test_op_mode_switch
+  src/test_op_mode_switch.cpp
+  ../trajectory_planner/src/trajectory_planner.cpp
+  ../pi3hat/pi3hat.cc
+  ../pi3hat/pi3hat_interface.cpp
+  )
+target_link_libraries(test_op_mode_switch m pthread bcm_host)
+
 #add_executable(test_max_loading
 #  src/test_max_loading.cpp
 #  ../trajectory_planner/src/trajectory_planner.cpp
