@@ -17,6 +17,11 @@ using namespace std::chrono;
 
 ofstream log_file("../verify_codes/test.csv");
 
+double phi_cmd_l, phi_feed_l;
+double psi_cmd_l, psi_feed_l;
+double phi_cmd_r, phi_feed_r;
+double psi_cmd_r, psi_feed_r;
+
 const std::map<int, int> servo_bus_map ={
   {1,1},
   {2,1},
@@ -36,10 +41,10 @@ void p2p(double joint_ini_right_finger[2], double joint_fin_right_finger[2], dou
         FiveBarKinematics& right_finger_kinematics, FiveBarKinematics& left_finger_kinematics, Pi3HatInterface& pi3_interface, 
         std::vector<MoteusCommand>& cmds, std::vector<MoteusResponse>& resp)
 {
-  double phi_cmd_l, phim_cmd_l, phi_feed_l, phim_feed_l;
-  double psi_cmd_l, psim_cmd_l, psi_feed_l, psim_feed_l;
-  double phi_cmd_r, phim_cmd_r, phi_feed_r, phim_feed_r;
-  double psi_cmd_r, psim_cmd_r, psi_feed_r, psim_feed_r;
+  double phim_cmd_l, phim_feed_l;
+  double psim_cmd_l, psim_feed_l;
+  double phim_cmd_r, phim_feed_r;
+  double psim_cmd_r, psim_feed_r;
   Vector<double, 6> conf_cmd_r, conf_cmd_l;
   Vector<double, 6> conf_feed_r, conf_feed_l;
 
@@ -115,10 +120,10 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
   pd_r = pF_r - pI_r;
   pd_l = pF_l - pI_l;
 
-  double phi_cmd_l, phim_cmd_l, phi_feed_l, phim_feed_l;
-  double psi_cmd_l, psim_cmd_l, psi_feed_l, psim_feed_l;
-  double phi_cmd_r, phim_cmd_r, phi_feed_r, phim_feed_r;
-  double psi_cmd_r, psim_cmd_r, psi_feed_r, psim_feed_r;
+  double phim_cmd_l, phim_feed_l;
+  double psim_cmd_l, psim_feed_l;
+  double phim_cmd_r, phim_feed_r;
+  double psim_cmd_r, psim_feed_r;
   Vector<double, 6> conf_cmd_r, conf_cmd_l, conf_feed_r, conf_feed_l;
 
   double path_length_r = sqrt(pd_r(0)*pd_r(0) + pd_r(1)*pd_r(1));
@@ -215,13 +220,10 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
   }
 } 
 
-void getCurrentPos(double& phi_feed_r, double& psi_feed_r, double& phi_feed_l, double& psi_feed_l, FiveBarKinematics& left_finger_kinematics, FiveBarKinematics& right_finger_kinematics, Pi3HatInterface& pi3_interface, 
+void updateCurrentPos(FiveBarKinematics& left_finger_kinematics, FiveBarKinematics& right_finger_kinematics, Pi3HatInterface& pi3_interface, 
 std::vector<MoteusCommand>& cmds, std::vector<MoteusResponse>& resp)
 {
-  double phim_feed_l;
-  double psim_feed_l;
-  double phim_feed_r;
-  double psim_feed_r;
+  double phim_feed_l, psim_feed_l, phim_feed_r, psim_feed_r;
 
   auto ti = high_resolution_clock::now();
   auto timeD = duration_cast<microseconds>(high_resolution_clock::now() - ti);
@@ -252,11 +254,6 @@ std::vector<MoteusCommand>& cmds, std::vector<MoteusResponse>& resp)
 void output_mode_switch(const char* op_mode, FiveBarKinematics& right_finger_kinematics, FiveBarKinematics& left_finger_kinematics, Pi3HatInterface& pi3_interface, 
           std::vector<MoteusCommand>& cmds, std::vector<MoteusResponse>& resp)
 {
-  // set phi_ini
-  double phi_cmd_l, phi_feed_l;
-  double psi_cmd_l, psi_feed_l;
-  double phi_cmd_r, phi_feed_r;
-  double psi_cmd_r, psi_feed_r;
 
   double joint_ini_right_finger[2];
   double joint_fin_right_finger[2];
@@ -273,12 +270,12 @@ void output_mode_switch(const char* op_mode, FiveBarKinematics& right_finger_kin
   else
     angles.open("../verify_codes/gripp_to_sense.csv", ios::in);
 
-  getCurrentPos(phi_feed_r, psi_feed_r, phi_feed_l, psi_feed_l, left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
+  //getCurrentPos(phi_feed_r, psi_feed_r, phi_feed_l, psi_feed_l, left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
 
-  joint_ini_right_finger[0] = phi_feed_r;
-  joint_ini_right_finger[1] = psi_feed_r;
-  joint_ini_left_finger[0] = phi_feed_l;
-  joint_ini_left_finger[1] = psi_feed_l;
+  joint_ini_right_finger[0] = phi_cmd_r;
+  joint_ini_right_finger[1] = psi_cmd_r;
+  joint_ini_left_finger[0] = phi_cmd_l;
+  joint_ini_left_finger[1] = psi_cmd_l;
 
   while(angles >> in_an)
   {  
@@ -429,7 +426,7 @@ int main(void)
 
   resp.resize(4);
 
-  getCurrentPos(phi_feed_r, psi_feed_r, phi_feed_l, psi_feed_l, left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
+  updateCurrentPos(left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(50));
   
@@ -468,7 +465,7 @@ int main(void)
   n_r = 4;
   n_l = 4;
 
-  getCurrentPos(phi_feed_r, psi_feed_r, phi_feed_l, psi_feed_l, left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
+  //getCurrentPos(phi_feed_r, psi_feed_r, phi_feed_l, psi_feed_l, left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
   
   right_finger_kinematics.inverseKinematics(pI_r, pm_r[0], pm_r[1], conf_cmd_r);
   left_finger_kinematics.inverseKinematics(pI_l, pm_l[0], pm_l[1], conf_cmd_l);
@@ -495,7 +492,7 @@ int main(void)
 
   output_mode_switch("sense", right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
-  getCurrentPos(phi_feed_r, psi_feed_r, phi_feed_l, psi_feed_l, left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
+  updateCurrentPos(left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
   
   return 0;
 }
