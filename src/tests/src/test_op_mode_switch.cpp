@@ -82,9 +82,9 @@ void p2p(double joint_ini_right_finger[2], double joint_fin_right_finger[2], dou
     cmds[2].position = psim_cmd_l; //TODO: check these
 
     // Uncommet to run
-    //pi3_interface.write(cmds);
+    pi3_interface.write(cmds);
 
-    pi3_interface.stop();
+    //pi3_interface.stop();
 
     right_finger_kinematics.forwardKinematics(phi_cmd_r, psi_cmd_r, 1, conf_cmd_r);
     left_finger_kinematics.forwardKinematics(phi_cmd_l, psi_cmd_l, -1, conf_cmd_l);
@@ -191,9 +191,9 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
     cmds[2].position = psim_cmd_l; //TODO: check these
 
     // Uncommet to run
-    //pi3_interface.write(cmds);
+    pi3_interface.write(cmds);
 
-    pi3_interface.stop();
+    //pi3_interface.stop();
 
     right_finger_kinematics.forwardKinematics(phi_feed_r, psi_feed_r, 1, conf_feed_r);
     left_finger_kinematics.forwardKinematics(phi_feed_l, psi_feed_l, -1, conf_feed_l);
@@ -276,9 +276,9 @@ void output_mode_switch(const char* op_mode, FiveBarKinematics& right_finger_kin
   getCurrentPos(phi_feed_r, psi_feed_r, phi_feed_l, psi_feed_l, left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
 
   joint_ini_right_finger[0] = phi_feed_r;
-  joint_ini_right_finger[1] = phi_feed_r;
+  joint_ini_right_finger[1] = psi_feed_r;
   joint_ini_left_finger[0] = phi_feed_l;
-  joint_ini_left_finger[1] = phi_feed_l;
+  joint_ini_left_finger[1] = psi_feed_l;
 
   while(angles >> in_an)
   {  
@@ -295,7 +295,7 @@ void output_mode_switch(const char* op_mode, FiveBarKinematics& right_finger_kin
     joint_fin_left_finger[1] = stod(psi_l);
     
     cout << "phi_r: " << joint_fin_right_finger[0] << ", psi_r: " << joint_fin_right_finger[1]
-         << "phi_l: " << joint_fin_left_finger[0] << ", psi_l: " << joint_fin_right_finger[1] << endl;
+         << ", phi_l: " << joint_fin_left_finger[0] << ", psi_l: " << joint_fin_right_finger[1] << endl;
   
     p2p(joint_ini_right_finger, joint_fin_right_finger, joint_ini_left_finger, joint_fin_left_finger, p2p_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
@@ -303,7 +303,7 @@ void output_mode_switch(const char* op_mode, FiveBarKinematics& right_finger_kin
     joint_ini_right_finger[1] = joint_fin_right_finger[1];
     joint_ini_left_finger[0] = joint_fin_left_finger[0];
     joint_ini_left_finger[1] = joint_fin_left_finger[1];
-    p2p_time = 0.5;    
+    p2p_time = 0.2;    
   }
 
 }
@@ -377,8 +377,8 @@ int main(void)
   cmds[0].position = 0.0;
   cmds[0].velocity = 0.0;
   cmds[0].feedforward_torque = 0;
-  cmds[0].kp_scale = 4;
-  cmds[0].kd_scale = 2;
+  cmds[0].kp_scale = 1;
+  cmds[0].kd_scale = 1;
   cmds[0].watchdog_timeout = 0;
 
   cmds[1].id = 2;
@@ -386,8 +386,8 @@ int main(void)
   cmds[1].position = 0.0;
   cmds[1].velocity = 0.0;
   cmds[1].feedforward_torque = 0;
-  cmds[1].kp_scale = 4;
-  cmds[1].kd_scale = 2;
+  cmds[1].kp_scale = 1;
+  cmds[1].kd_scale = 1;
   cmds[1].watchdog_timeout = 0;
 
   cmds[2].id = 3;
@@ -395,8 +395,8 @@ int main(void)
   cmds[2].position = 0.0;
   cmds[2].velocity = 0.0;
   cmds[2].feedforward_torque = 0;
-  cmds[2].kp_scale = 4;
-  cmds[2].kd_scale = 2;
+  cmds[2].kp_scale = 1;
+  cmds[2].kd_scale = 1;
   cmds[2].watchdog_timeout = 0;
 
   cmds[3].id = 4;
@@ -404,8 +404,8 @@ int main(void)
   cmds[3].position = 0.0;
   cmds[3].velocity = 0.0;
   cmds[3].feedforward_torque = 0;
-  cmds[3].kp_scale = 4;
-  cmds[3].kd_scale = 2;
+  cmds[3].kp_scale = 1;
+  cmds[3].kd_scale = 1;
   cmds[3].watchdog_timeout = 0;
   
   Vector<double, 2> pI_r, pF_r, pI_l, pF_l;
