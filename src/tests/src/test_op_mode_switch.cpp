@@ -313,8 +313,8 @@ void output_mode_switch(const char* op_mode, FiveBarKinematics& right_finger_kin
     pm_r[1] = 1;  
     pm_l[0] = 1;
     pm_l[1] = -1;
-    right_finger_kinematics.addIKAngleOffsets(-2*M_PI, 0);
-    left_finger_kinematics.addIKAngleOffsets(2*M_PI, 0);
+    right_finger_kinematics.addIKAngleOffsets(2*M_PI, 0);
+    left_finger_kinematics.addIKAngleOffsets(-2*M_PI, 0);
   }
   else
   {
@@ -322,8 +322,8 @@ void output_mode_switch(const char* op_mode, FiveBarKinematics& right_finger_kin
     pm_r[1] = -1;  
     pm_l[0] = -1;
     pm_l[1] = 1;
-    right_finger_kinematics.addIKAngleOffsets(2*M_PI, 0);
-    left_finger_kinematics.addIKAngleOffsets(-2*M_PI, 0);
+    right_finger_kinematics.addIKAngleOffsets(-2*M_PI, 0);
+    left_finger_kinematics.addIKAngleOffsets(2*M_PI, 0);
   }
 
 }
@@ -337,9 +337,7 @@ int main(void)
 
   std::vector<MoteusCommand> cmds;
   std::vector<MoteusResponse> resp;
-  
-  double phi_feed_r, psi_feed_r, phi_feed_l, psi_feed_l;
-  
+    
   // Dimensions of right finger
   Matrix<double, 2, 1> A0r, B0r, C0r, D0r, F0r, P0r;
   Matrix<double, 2, 6> dim_right_finger;
@@ -490,6 +488,15 @@ int main(void)
   
   right_finger_kinematics.inverseKinematics(pI_r, pm_r[0], pm_r[1], conf_cmd_r);
   left_finger_kinematics.inverseKinematics(pI_l, pm_l[0], pm_l[1], conf_cmd_l);
+
+  cout << "phi_cmd_r: " << phi_cmd_r
+       << ", psi_cmd_r: " << psi_cmd_r
+       << ", conf_phi_cmd_r: " << conf_cmd_r(0)       
+       << ", conf_psi_cmd_r: " << conf_cmd_r(1) << endl;       
+  cout << ", phi_cmd_l: " << phi_cmd_l
+       << ", psi_cmd_l: " << psi_cmd_l
+       << ", conf_phi_cmd_l: " << conf_cmd_l(0)       
+       << ", conf_psi_cmd_l: " << conf_cmd_l(1) << endl;
 
   joint_ini_right_finger[0] = phi_cmd_r;
   joint_ini_right_finger[1] = psi_cmd_r;
