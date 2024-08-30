@@ -303,7 +303,7 @@ void output_mode_switch(const char* op_mode, FiveBarKinematics& right_finger_kin
     joint_ini_right_finger[1] = joint_fin_right_finger[1];
     joint_ini_left_finger[0] = joint_fin_left_finger[0];
     joint_ini_left_finger[1] = joint_fin_left_finger[1];
-    p2p_time = 0.2;    
+    p2p_time = 0.08;    
   }
 
   // TODO: check these
