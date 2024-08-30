@@ -90,9 +90,9 @@ void p2p(double joint_ini_right_finger[2], double joint_fin_right_finger[2], dou
     cmds[2].position = psim_cmd_l; //TODO: check these
 
     // Uncommet to run
-    //pi3_interface.write(cmds);
+    pi3_interface.write(cmds);
 
-    pi3_interface.stop();
+    //pi3_interface.stop();
 
     right_finger_kinematics.forwardKinematics(phi_cmd_r, psi_cmd_r, 1, conf_cmd_r);
     left_finger_kinematics.forwardKinematics(phi_cmd_l, psi_cmd_l, -1, conf_cmd_l);
@@ -199,9 +199,9 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
     cmds[2].position = psim_cmd_l; //TODO: check these
 
     // Uncommet to run
-    //pi3_interface.write(cmds);
+    pi3_interface.write(cmds);
 
-    pi3_interface.stop();
+    //pi3_interface.stop();
 
     right_finger_kinematics.forwardKinematics(phi_feed_r, psi_feed_r, 1, conf_feed_r);
     left_finger_kinematics.forwardKinematics(phi_feed_l, psi_feed_l, -1, conf_feed_l);
