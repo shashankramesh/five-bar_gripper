@@ -1,7 +1,7 @@
 /*
- * file: test_op_mode_switch.cpp
+ * file: test_gripp_mode.cpp
  *
- * Created: 29 Aug, 2024
+ * Created: 30 Aug, 2024
  * Author: Shashank Ramesh
  */
  
@@ -37,6 +37,89 @@ void orderResponse(std::vector<MoteusResponse> resp_in, std::vector<MoteusRespon
   for(int jj = 0; jj < 4; jj++)
   {
     resp_out[int(resp_in[jj].id) - 1] = resp_in[jj];
+  }
+}
+
+void hold(double torque_r[2], double torque_r[2], double hold_time,
+        FiveBarKinematics& right_finger_kinematics, FiveBarKinematics& left_finger_kinematics, Pi3HatInterface& pi3_interface, 
+        std::vector<MoteusCommand>& cmds, std::vector<MoteusResponse>& resp)
+{
+  double phim_cmd_l, phim_feed_l;
+  double psim_cmd_l, psim_feed_l;
+  double phim_cmd_r, phim_feed_r;
+  double psim_cmd_r, psim_feed_r;
+  Vector<double, 6> conf_cmd_r, conf_cmd_l;
+  Vector<double, 6> conf_feed_r, conf_feed_l;
+
+  auto ti = high_resolution_clock::now();
+  auto timeD = duration_cast<microseconds>(high_resolution_clock::now() - ti);
+
+  double time = 0;
+
+  while(time <= hold_time)
+  {
+    timeD = duration_cast<microseconds>(high_resolution_clock::now() - ti);
+    time = timeD.count()*1e-6;
+
+    // Feedback
+    orderResponse(pi3_interface.read(), resp);
+    
+    phim_feed_r = resp[1].position;
+    psim_feed_r = resp[0].position;
+    phim_feed_l = resp[3].position;
+    psim_feed_l = resp[2].position;
+    
+    right_finger_kinematics.getRelativeAngles(phim_feed_r, psim_feed_r, phi_feed_r, psi_feed_r);
+    left_finger_kinematics.getRelativeAngles(phim_feed_l, psim_feed_l, phi_feed_l, psi_feed_l);
+
+    right_finger_kinematics.forwardKinematics(phi_feed_r, psi_feed_r, 1, conf_feed_r);
+    left_finger_kinematics.forwardKinematics(phi_feed_l, psi_feed_l, -1, conf_feed_l);
+
+    // Command
+    right_finger_kinematics.getMotorAngles(phi_cmd_r, psi_cmd_r, phim_cmd_r, psim_cmd_r);
+    left_finger_kinematics.getMotorAngles(phi_cmd_l, psi_cmd_l, phim_cmd_l, psim_cmd_l);
+
+    cmds[1].position = phim_cmd_r;
+    cmds[0].position = psim_cmd_r;
+    cmds[3].position = phim_cmd_l;
+    cmds[2].position = psim_cmd_l; //TODO: check these
+
+    cmds[1].feedforward_torque = torque_r[0];
+    cmds[0].feedforward_torque = torque_r[1];
+    cmds[3].feedforward_torque = torque_l[0];
+    cmds[2].feedforward_torque = torque_l[1]; //TODO: check the signs
+
+    // Uncommet to run
+    //pi3_interface.write(cmds);
+
+    pi3_interface.stop();
+
+    right_finger_kinematics.forwardKinematics(phi_cmd_r, psi_cmd_r, 1, conf_cmd_r);
+    left_finger_kinematics.forwardKinematics(phi_cmd_l, psi_cmd_l, -1, conf_cmd_l);
+
+    log_file << time << "," << conf_cmd_r(0) << "," << conf_cmd_r(1) 
+      << "," << conf_cmd_r(2) << "," << conf_cmd_r(3) 
+      << "," << conf_cmd_r(4) << "," << conf_cmd_r(5)
+        << "," << conf_feed_r(0) << "," << conf_feed_r(1) 
+      << "," << conf_feed_r(2) << "," << conf_feed_r(3) 
+      << "," << conf_feed_r(4) << "," << conf_feed_r(5)
+      << "," << conf_cmd_l(0) << "," << conf_cmd_l(1) 
+      << "," << conf_cmd_l(2) << "," << conf_cmd_l(3) 
+      << "," << conf_cmd_l(4) << "," << conf_cmd_l(5)
+        << "," << conf_feed_l(0) << "," << conf_feed_l(1) 
+      << "," << conf_feed_l(2) << "," << conf_feed_l(3) 
+      << "," << conf_feed_l(4) << "," << conf_feed_l(5) 
+      << "," << cmds[1].feedforward_torque
+      << "," << cmds[0].feedforward_torque
+      << "," << cmds[3].feedforward_torque
+      << "," << cmds[2].feedforward_torque
+      << "," << resp[1].torque
+      << "," << resp[0].torque
+      << "," << resp[3].torque
+      << "," << resp[2].torque
+      << endl;
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 }
 
@@ -325,6 +408,46 @@ void output_mode_switch(const char* op_mode, FiveBarKinematics& right_finger_kin
     right_finger_kinematics.addAngleOffsets(2*M_PI, 0);
     left_finger_kinematics.addAngleOffsets(-2*M_PI, 0);
   }
+
+}
+
+void gripp(Vector<double, 2> P_r, Vector<double, 2> P_l, Vector<double, 2> F_r, Vector<double, 2> F_l, double hold_timeout, FiveBarKinematics& right_finger_kinematics, FiveBarKinematics& left_finger_kinematics, Pi3HatInterface& pi3_interface, 
+          std::vector<MoteusCommand>& cmds, std::vector<MoteusResponse>& resp)
+{
+  Vector<double, 6> conf_cmd_r, conf_cmd_l;
+
+  // go to specified pose
+  double joint_ini_right_finger[2];
+  double joint_fin_right_finger[2];
+  double joint_ini_left_finger[2];
+  double joint_fin_left_finger[2];
+  double p2p_time = 3;
+
+  right_finger_kinematics.inverseKinematics(P_r, pm_r[0], pm_r[1], conf_cmd_r);
+  left_finger_kinematics.inverseKinematics(P_l, pm_l[0], pm_l[1], conf_cmd_l);
+
+  joint_ini_right_finger[0] = phi_cmd_r;
+  joint_ini_right_finger[1] = psi_cmd_r;
+  joint_ini_left_finger[0] = phi_cmd_l;
+  joint_ini_left_finger[1] = psi_cmd_l;
+  joint_fin_right_finger[0] = conf_cmd_r(0);
+  joint_fin_right_finger[1] = conf_cmd_r(1);
+  joint_fin_left_finger[0] = conf_cmd_l(0);
+  joint_fin_left_finger[1] = conf_cmd_l(1);
+
+  p2p(joint_ini_right_finger, joint_fin_right_finger, joint_ini_left_finger, joint_fin_left_finger, p2p_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+
+  // apply specified force
+  Matrix<double, 2, 2> J_l, J_r;
+  Vector<double, 2> torque_l, torque_r;
+
+  right_finger_kinematics.jacobian(conf_cmd_r, J_r);
+  left_finger_kinematics.jacobian(conf_cmd_l, J_l);
+
+  torque_r = J_r.transpose()*F_r;
+  torque_l = J_l.transpose()*F_l;
+
+  hold(torque_r, torque_r, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
 }
 

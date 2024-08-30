@@ -44,6 +44,18 @@ class FiveBarKinematics
     {
     }
 
+    void setAngleOffsets(double phi_offset, double psi_offset)
+    {
+      phi_ref = phi_offset;
+      psi_ref = psi_offset;
+    }
+
+    void addAngleOffsets(double phi_add, double psi_add)
+    {
+      phi_ref += phi_add;
+      psi_ref += psi_add;
+    }
+
     void getRelativeAngles(double phim, double psim, double& phi, double& psi)
     {
       phi = ((double)phi_sign)*phim - phi_ref;
