@@ -586,8 +586,8 @@ int main(void)
   double n_r = 4;
   double n_l = 4;
   
-  Vector<double, 2> torque_r;
-  Vector<double, 2> torque_l;
+  Vector<double, 2> torque_r, F_r;
+  Vector<double, 2> torque_l, F_l;
   double hold_time = 2;
 
   // Start all motors in stopped mode to clear all faults
@@ -622,10 +622,8 @@ int main(void)
 
   output_mode_switch("gripp", right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
-  pI_r << 0.01, 0.05;
-  pF_r << 0.025, 0.05;
-  pI_l << -0.01, 0.05;
-  pF_l << -0.025, 0.05;
+  pI_r << 0.02, 0.05;
+  pI_l << -0.02, 0.05;
 
   path_time_r = 2;
   path_time_l = 2;
@@ -655,6 +653,13 @@ int main(void)
   torque_l << 0, 0;
 
   hold(torque_r, torque_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+
+  std::cout << "gripp" << endl;
+
+  F_r << -5, 0;
+  F_l << 5, 0;
+
+  gripp(pI_r, pI_l, F_r, F_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
   std::cout << "output mode switch" << std::endl;
 
