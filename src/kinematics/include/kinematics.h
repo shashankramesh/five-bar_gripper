@@ -37,6 +37,9 @@ class FiveBarKinematics
 
       phi_sign = phi_s;
       psi_sign = psi_s;
+      
+      phi_ik = 0;
+      psi_ik = 0;
 
     }
 
@@ -50,10 +53,10 @@ class FiveBarKinematics
       psi_ref = psi_offset;
     }
 
-    void addAngleOffsets(double phi_add, double psi_add)
+    void addIKAngleOffsets(double phi_add, double psi_add)
     {
-      phi_ref += phi_add;
-      psi_ref += psi_add;
+      phi_ik = phi_add;
+      psi_ik = psi_add;
     }
 
     void getRelativeAngles(double phim, double psim, double& phi, double& psi)
@@ -163,8 +166,8 @@ class FiveBarKinematics
       ep << matep*(delta - Rotpsi*DB);
       theta = atan2(ep(1), ep(0));
 
-      result(0) = phi;
-      result(1) = psi;
+      result(0) = phi + phi_ik;
+      result(1) = psi + psi_ik;
       result(2) = rho;
       result(3) = theta;
       result(4) = P(0);
@@ -251,6 +254,7 @@ class FiveBarKinematics
 
     double alpha, beta, gamma, theta, rho, psi, phi, den, FClen, FDlen;
     double CFD, phi_ref, psi_ref, phi_sign, psi_sign;
+    double phi_ik, psi_ik;
 
     inline double dot(Matrix<double, 2, 1> v1, Matrix<double, 2, 1> v2)
     {

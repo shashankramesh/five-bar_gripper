@@ -313,8 +313,8 @@ void output_mode_switch(const char* op_mode, FiveBarKinematics& right_finger_kin
     pm_r[1] = 1;  
     pm_l[0] = 1;
     pm_l[1] = -1;
-    right_finger_kinematics.addAngleOffsets(-2*M_PI, 0);
-    left_finger_kinematics.addAngleOffsets(2*M_PI, 0);
+    right_finger_kinematics.addIKAngleOffsets(-2*M_PI, 0);
+    left_finger_kinematics.addIKAngleOffsets(2*M_PI, 0);
   }
   else
   {
@@ -322,8 +322,8 @@ void output_mode_switch(const char* op_mode, FiveBarKinematics& right_finger_kin
     pm_r[1] = -1;  
     pm_l[0] = -1;
     pm_l[1] = 1;
-    right_finger_kinematics.addAngleOffsets(2*M_PI, 0);
-    left_finger_kinematics.addAngleOffsets(-2*M_PI, 0);
+    right_finger_kinematics.addIKAngleOffsets(2*M_PI, 0);
+    left_finger_kinematics.addIKAngleOffsets(-2*M_PI, 0);
   }
 
 }
@@ -491,12 +491,12 @@ int main(void)
   right_finger_kinematics.inverseKinematics(pI_r, pm_r[0], pm_r[1], conf_cmd_r);
   left_finger_kinematics.inverseKinematics(pI_l, pm_l[0], pm_l[1], conf_cmd_l);
 
-  joint_ini_right_finger[0] = phi_feed_r;
-  joint_ini_right_finger[1] = psi_feed_r;
+  joint_ini_right_finger[0] = phi_cmd_r;
+  joint_ini_right_finger[1] = psi_cmd_r;
   joint_fin_right_finger[0] = conf_cmd_r(0);
   joint_fin_right_finger[1] = conf_cmd_r(1);
-  joint_ini_left_finger[0] = phi_feed_l;
-  joint_ini_left_finger[1] = psi_feed_l;
+  joint_ini_left_finger[0] = phi_cmd_l;
+  joint_ini_left_finger[1] = psi_cmd_l;
   joint_fin_left_finger[0] = conf_cmd_l(0);
   joint_fin_left_finger[1] = conf_cmd_l(1);
   p2p_time = 3;
