@@ -248,6 +248,11 @@ std::vector<MoteusCommand>& cmds, std::vector<MoteusResponse>& resp)
     right_finger_kinematics.getRelativeAngles(phim_feed_r, psim_feed_r, phi_feed_r, psi_feed_r);
     left_finger_kinematics.getRelativeAngles(phim_feed_l, psim_feed_l, phi_feed_l, psi_feed_l);
         
+    phi_cmd_r = phi_feed_r;
+    psi_cmd_r = psi_feed_r;
+    phi_cmd_l = phi_feed_l;
+    psi_cmd_l = psi_feed_l;
+
     pi3_interface.stop();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10));  
@@ -475,16 +480,10 @@ int main(void)
   pI_l << -0.01, 0.05;
   pF_l << -0.025, 0.05;
 
-  /*pm_r[0] = -1;
-  pm_r[1] = 1;  
-  pm_l[0] = 1;
-  pm_l[1] = -1;*/
   path_time_r = 2;
   path_time_l = 2;
   n_r = 4;
   n_l = 4;
-
-  //getCurrentPos(phi_feed_r, psi_feed_r, phi_feed_l, psi_feed_l, left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
   
   right_finger_kinematics.inverseKinematics(pI_r, pm_r[0], pm_r[1], conf_cmd_r);
   left_finger_kinematics.inverseKinematics(pI_l, pm_l[0], pm_l[1], conf_cmd_l);

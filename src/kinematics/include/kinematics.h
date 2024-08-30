@@ -70,6 +70,18 @@ class FiveBarKinematics
       phim = ((double)phi_sign)*(phi + phi_ref);
       psim = ((double)psi_sign)*(psi + psi_ref);
     }
+    
+    void getMotorTorquesCommand(double phi_torque, double psi_torque, double& phi_torque_m, double& psi_torque_m)
+    {
+      phi_torque_m = ((double)phi_sign)*phi_torque;
+      psi_torque_m = ((double)psi_sign)*psi_torque;
+    }
+
+    void getMotorTorquesFeedback(double phi_torque_m, double psi_torque_m, double& phi_torque, double& psi_torque)
+    {
+      phi_torque = ((double)phi_sign)*phi_torque_m;
+      psi_torque = ((double)psi_sign)*psi_torque_m;
+    }
 
     /*
      * Forward Kinematics of the Five-Bar Mechanism

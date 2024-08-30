@@ -51,7 +51,7 @@ void Pi3HatInterface::initialize(std::map<int, int> servo_bus_map)
   moteus::PositionResolution res;
   res.position = moteus::Resolution::kInt16;
   res.velocity = moteus::Resolution::kInt16;
-  res.feedforward_torque = moteus::Resolution::kInt16;
+  res.feedforward_torque = moteus::Resolution::kFloat;
   res.kp_scale = moteus::Resolution::kFloat;
   res.kd_scale = moteus::Resolution::kFloat;
   res.maximum_torque = moteus::Resolution::kIgnore;
@@ -84,7 +84,7 @@ std::vector<MoteusResponse> Pi3HatInterface::read(void)
       mresp.mode        = (uint8_t) it->result.mode;
       mresp.position    = it->result.position * (-2*M_PI); // convert to radians
       mresp.velocity    = it->result.velocity * (-2*M_PI); // convert to radians/sec
-      mresp.torque      = it->result.torque;
+      mresp.torque      = it->result.torque * (-1);
       mresp.temperature = it->result.temperature;
       mresp.voltage     = it->result.voltage;
 
@@ -138,7 +138,7 @@ void Pi3HatInterface::write(std::vector<MoteusCommand> cmds)
     scmd->mode                        = (mjbots::moteus::Mode) cmd.mode;
     scmd->position.position           = -cmd.position / (2*M_PI); // convert to number of rotations
     scmd->position.velocity           = -cmd.velocity / (2*M_PI); // conver to number of rotations per second.
-    scmd->position.feedforward_torque = cmd.feedforward_torque;
+    scmd->position.feedforward_torque = -cmd.feedforward_torque;
     scmd->position.kp_scale           = cmd.kp_scale;
     scmd->position.kd_scale           = cmd.kd_scale;
     scmd->position.watchdog_timeout   = cmd.watchdog_timeout;
