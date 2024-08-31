@@ -37,6 +37,8 @@ typedef struct  {
   double position; // rad
   double velocity; // rad/sec
   double torque;  // Nm
+  double q_current;
+  double d_current;
   double voltage; // V
   double temperature; // deg C
 } MoteusResponse;

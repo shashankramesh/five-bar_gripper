@@ -85,6 +85,8 @@ std::vector<MoteusResponse> Pi3HatInterface::read(void)
       mresp.position    = it->result.position * (-2*M_PI); // convert to radians
       mresp.velocity    = it->result.velocity * (-2*M_PI); // convert to radians/sec
       mresp.torque      = it->result.torque * (-1);
+      mresp.q_current   = it->result.q_current;
+      mresp.d_current   = it->result.d_current;
       mresp.temperature = it->result.temperature;
       mresp.voltage     = it->result.voltage;
 
