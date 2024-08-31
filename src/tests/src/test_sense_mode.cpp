@@ -119,6 +119,105 @@ void hold(Vector<double, 2> torque_r, Vector<double, 2> torque_l, double hold_ti
       << "," << resp[0].torque
       << "," << resp[3].torque
       << "," << resp[2].torque
+      << "," << resp[1].q_current
+      << "," << resp[0].q_current
+      << "," << resp[3].q_current
+      << "," << resp[2].q_current
+      << "," << resp[1].d_current
+      << "," << resp[0].d_current
+      << "," << resp[3].d_current
+      << "," << resp[2].d_current
+      << endl;
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+}
+
+void release(double release_time, FiveBarKinematics& right_finger_kinematics, FiveBarKinematics& left_finger_kinematics, Pi3HatInterface& pi3_interface, 
+        std::vector<MoteusCommand>& cmds, std::vector<MoteusResponse>& resp)
+{
+  double phim_cmd_l, phim_feed_l;
+  double psim_cmd_l, psim_feed_l;
+  double phim_cmd_r, phim_feed_r;
+  double psim_cmd_r, psim_feed_r;
+  Vector<double, 6> conf_cmd_r, conf_cmd_l;
+  Vector<double, 6> conf_feed_r, conf_feed_l;
+
+  auto ti = high_resolution_clock::now();
+  auto timeD = duration_cast<microseconds>(high_resolution_clock::now() - ti);
+
+  double time = 0;
+
+  while(time <= release_time)
+  {
+    timeD = duration_cast<microseconds>(high_resolution_clock::now() - ti);
+    time = timeD.count()*1e-6;
+
+    // Feedback
+    orderResponse(pi3_interface.read(), resp);
+    
+    phim_feed_r = resp[1].position;
+    psim_feed_r = resp[0].position;
+    phim_feed_l = resp[3].position;
+    psim_feed_l = resp[2].position;
+    
+    right_finger_kinematics.getRelativeAngles(phim_feed_r, psim_feed_r, phi_feed_r, psi_feed_r);
+    left_finger_kinematics.getRelativeAngles(phim_feed_l, psim_feed_l, phi_feed_l, psi_feed_l);
+
+    right_finger_kinematics.forwardKinematics(phi_feed_r, psi_feed_r, 1, conf_feed_r);
+    left_finger_kinematics.forwardKinematics(phi_feed_l, psi_feed_l, -1, conf_feed_l);
+
+    // Command
+    right_finger_kinematics.getMotorAngles(phi_cmd_r, psi_cmd_r, phim_cmd_r, psim_cmd_r);
+    left_finger_kinematics.getMotorAngles(phi_cmd_l, psi_cmd_l, phim_cmd_l, psim_cmd_l);
+
+    cmds[1].position = phim_cmd_r;
+    cmds[0].position = psim_cmd_r;
+    cmds[3].position = phim_cmd_l;
+    cmds[2].position = psim_cmd_l;
+    
+    
+    cmds[1].feedforward_torque = 0;
+    cmds[0].feedforward_torque = 0;
+    cmds[3].feedforward_torque = 0;
+    cmds[2].feedforward_torque = 0;
+    
+    // Uncommet to run
+    pi3_interface.write(cmds);
+
+    //pi3_interface.stop();
+
+    right_finger_kinematics.forwardKinematics(phi_cmd_r, psi_cmd_r, 1, conf_cmd_r);
+    left_finger_kinematics.forwardKinematics(phi_cmd_l, psi_cmd_l, -1, conf_cmd_l);
+
+    log_file << time << "," << conf_cmd_r(0) << "," << conf_cmd_r(1) 
+      << "," << conf_cmd_r(2) << "," << conf_cmd_r(3) 
+      << "," << conf_cmd_r(4) << "," << conf_cmd_r(5)
+        << "," << conf_feed_r(0) << "," << conf_feed_r(1) 
+      << "," << conf_feed_r(2) << "," << conf_feed_r(3) 
+      << "," << conf_feed_r(4) << "," << conf_feed_r(5)
+      << "," << conf_cmd_l(0) << "," << conf_cmd_l(1) 
+      << "," << conf_cmd_l(2) << "," << conf_cmd_l(3) 
+      << "," << conf_cmd_l(4) << "," << conf_cmd_l(5)
+        << "," << conf_feed_l(0) << "," << conf_feed_l(1) 
+      << "," << conf_feed_l(2) << "," << conf_feed_l(3) 
+      << "," << conf_feed_l(4) << "," << conf_feed_l(5) 
+      << "," << cmds[1].feedforward_torque
+      << "," << cmds[0].feedforward_torque
+      << "," << cmds[3].feedforward_torque
+      << "," << cmds[2].feedforward_torque
+      << "," << resp[1].torque
+      << "," << resp[0].torque
+      << "," << resp[3].torque
+      << "," << resp[2].torque
+      << "," << resp[1].q_current
+      << "," << resp[0].q_current
+      << "," << resp[3].q_current
+      << "," << resp[2].q_current
+      << "," << resp[1].d_current
+      << "," << resp[0].d_current
+      << "," << resp[3].d_current
+      << "," << resp[2].d_current
       << endl;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -202,6 +301,14 @@ void p2p(double joint_ini_right_finger[2], double joint_fin_right_finger[2], dou
       << "," << resp[0].torque
       << "," << resp[3].torque
       << "," << resp[2].torque
+      << "," << resp[1].q_current
+      << "," << resp[0].q_current
+      << "," << resp[3].q_current
+      << "," << resp[2].q_current
+      << "," << resp[1].d_current
+      << "," << resp[0].d_current
+      << "," << resp[3].d_current
+      << "," << resp[2].d_current
       << endl;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -284,6 +391,11 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
     left_finger_kinematics.inverseKinematics(P_l, pm_l[0], pm_l[1], conf_cmd_l);
 
     // Command
+    phi_cmd_r = conf_cmd_r(0);
+    psi_cmd_r = conf_cmd_r(1);
+    phi_cmd_l = conf_cmd_l(0);
+    psi_cmd_l = conf_cmd_l(1);
+    
     right_finger_kinematics.getMotorAngles(conf_cmd_r(0), conf_cmd_r(1), phim_cmd_r, psim_cmd_r);
     left_finger_kinematics.getMotorAngles(conf_cmd_l(0), conf_cmd_l(1), phim_cmd_l, psim_cmd_l);
 
@@ -320,6 +432,14 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
       << "," << resp[0].torque
       << "," << resp[3].torque
       << "," << resp[2].torque
+      << "," << resp[1].q_current
+      << "," << resp[0].q_current
+      << "," << resp[3].q_current
+      << "," << resp[2].q_current
+      << "," << resp[1].d_current
+      << "," << resp[0].d_current
+      << "," << resp[3].d_current
+      << "," << resp[2].d_current
       << endl;
       
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -472,13 +592,16 @@ void gripp(Vector<double, 2> P_r, Vector<double, 2> P_l, Vector<double, 2> F_r, 
   torque_r = J_r.transpose()*F_r;
   torque_l = J_l.transpose()*F_l;
 
-  hold(torque_r, torque_r, hold_timeout, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+  hold(torque_r, torque_l, hold_timeout, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+
+  release(1, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
 }
 
 void sense(Vector<double, 2> pI_r, Vector<double, 2> pF_r, Vector<double, 2> pI_l, Vector<double, 2> pF_l, double sense_timeout, FiveBarKinematics& right_finger_kinematics, FiveBarKinematics& left_finger_kinematics, Pi3HatInterface& pi3_interface, 
           std::vector<MoteusCommand>& cmds, std::vector<MoteusResponse>& resp)
 {
+  Vector<double, 6> conf_cmd_l, conf_cmd_r;
 
   right_finger_kinematics.inverseKinematics(pI_r, pm_r[0], pm_r[1], conf_cmd_r);
   left_finger_kinematics.inverseKinematics(pI_l, pm_l[0], pm_l[1], conf_cmd_l);
@@ -595,12 +718,8 @@ int main(void)
   cmds[3].kd_scale = 2;
   cmds[3].watchdog_timeout = 0;
   
-  Vector<double, 2> pI_r, pF_r, pI_l, pF_l;
-
-  pI_r << 0.01, 0.04;
-  pF_r << 0.04, 0.04;
-  pI_l << -0.01, 0.04;
-  pF_l << -0.04, 0.04;
+  Vector<double, 2> pI_r_sense, pF_r_sense, pI_l_sense, pF_l_sense;
+  Vector<double, 2> pI_r_gripp, pF_r_gripp, pI_l_gripp, pF_l_gripp;
 
   double path_time_r = 2;
   double path_time_l = 2;
@@ -622,14 +741,8 @@ int main(void)
 
   std::this_thread::sleep_for(std::chrono::milliseconds(50));
   
-  right_finger_kinematics.inverseKinematics(pI_r, pm_r[0], pm_r[1], conf_cmd_r);
-  left_finger_kinematics.inverseKinematics(pI_l, pm_l[0], pm_l[1], conf_cmd_l);
-
-  double joint_ini_right_finger[2] = {phi_feed_r, psi_feed_r};
-  double joint_fin_right_finger[2] = {conf_cmd_r(0), conf_cmd_r(1)};
-  double joint_ini_left_finger[2] = {phi_feed_l, psi_feed_l};
-  double joint_fin_left_finger[2] = {conf_cmd_l(0), conf_cmd_l(1)};
-  double p2p_time = 3;
+  //right_finger_kinematics.inverseKinematics(pI_r, pm_r[0], pm_r[1], conf_cmd_r);
+  //left_finger_kinematics.inverseKinematics(pI_l, pm_l[0], pm_l[1], conf_cmd_l);
 
   //std::cout << "p2p" << std::endl;
 
@@ -639,22 +752,36 @@ int main(void)
 
   //linear_motion(pI_r, pF_r, pm_r, path_time_r, n_r, pI_l, pF_l, pm_l, path_time_l, n_l, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
-  std::cout << "output mode switch" << std::endl;
+  //std::cout << "output mode switch" << std::endl;
 
-  output_mode_switch("gripp", right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+  //output_mode_switch("gripp", right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
-  pI_r << 0.02, 0.05;
-  pI_l << -0.02, 0.05;
+  pI_r_gripp << 0.02, 0.05;
+  pI_l_gripp << -0.02, 0.05;
+  pF_r_gripp << 0.01, 0.05;
+  pF_l_gripp << -0.01, 0.05;
 
-  path_time_r = 2;
-  path_time_l = 2;
-  n_r = 4;
-  n_l = 4;
+  pI_r_sense << 0.04, 0.04;
+  pF_r_sense << 0.01, 0.04;
+  pI_l_sense << -0.04, 0.04;
+  pF_l_sense << -0.04, 0.04;
+
+  double sense_time = 4;
+
+  std::cout << "sense" << std::endl;
+
+  sense(pI_r_sense, pF_r_sense, pI_l_sense, pF_l_sense, sense_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+
+  right_finger_kinematics.inverseKinematics(pI_r_sense, pm_r[0], pm_r[1], conf_cmd_r);
+  left_finger_kinematics.inverseKinematics(pI_l_sense, pm_l[0], pm_l[1], conf_cmd_l);
+
+  double joint_ini_right_finger[2] = {phi_cmd_r, psi_cmd_r};
+  double joint_fin_right_finger[2] = {conf_cmd_r(0), conf_cmd_r(1)};
+  double joint_ini_left_finger[2] = {phi_cmd_l, psi_cmd_l};
+  double joint_fin_left_finger[2] = {conf_cmd_l(0), conf_cmd_l(1)};
+  double p2p_time = 3;
   
-  right_finger_kinematics.inverseKinematics(pI_r, pm_r[0], pm_r[1], conf_cmd_r);
-  left_finger_kinematics.inverseKinematics(pI_l, pm_l[0], pm_l[1], conf_cmd_l);
-
-  joint_ini_right_finger[0] = phi_cmd_r;
+  /*joint_ini_right_finger[0] = phi_cmd_r;
   joint_ini_right_finger[1] = psi_cmd_r;
   joint_fin_right_finger[0] = conf_cmd_r(0);
   joint_fin_right_finger[1] = conf_cmd_r(1);
@@ -662,29 +789,29 @@ int main(void)
   joint_ini_left_finger[1] = psi_cmd_l;
   joint_fin_left_finger[0] = conf_cmd_l(0);
   joint_fin_left_finger[1] = conf_cmd_l(1);
-  p2p_time = 3;
+  p2p_time = 3;*/
 
   std::cout << "p2p" << std::endl;
 
   p2p(joint_ini_right_finger, joint_fin_right_finger, joint_ini_left_finger, joint_fin_left_finger, p2p_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
-  std::cout << "hold" << endl;
+  //std::cout << "hold" << endl;
 
-  torque_r << 0, 0;
-  torque_l << 0, 0;
+  //torque_r << 0, 0;
+  //torque_l << 0, 0;
 
-  hold(torque_r, torque_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+  //hold(torque_r, torque_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
-  std::cout << "gripp" << endl;
+  //std::cout << "gripp" << endl;
 
-  F_r << -5, 0;
-  F_l << 5, 0;
+  //F_r << -5, 0;
+  //F_l << 5, 0;
 
-  gripp(pI_r, pI_l, F_r, F_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+  //gripp(pI_r, pI_l, F_r, F_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
-  std::cout << "output mode switch" << std::endl;
+  //std::cout << "output mode switch" << std::endl;
 
-  output_mode_switch("sense", right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+  //output_mode_switch("sense", right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
   updateCurrentPos(left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
   

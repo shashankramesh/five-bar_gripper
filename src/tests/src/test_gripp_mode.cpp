@@ -779,8 +779,8 @@ int main(void)
 
   std::cout << "gripp" << endl;
 
-  F_r << -5, 0;
-  F_l << 5, 0;
+  F_r << -10, 0;
+  F_l << 10, 0;
 
   gripp(pF_r, pF_l, F_r, F_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
