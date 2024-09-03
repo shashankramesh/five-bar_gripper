@@ -85,7 +85,7 @@ int main(int argc, char** argv)
   Matrix<double, 2, 6> dim_left_finger;
   Vector<double, 6> conf_feed_l, conf_cmd_l;
 
-  double phi_offset_l = -2.02255;
+  double phi_offset_l = -2.07074;//-2.02255;
   double psi_offset_l = -0.34228;
   int phi_sign_l = 1;
   int psi_sign_l = -1;

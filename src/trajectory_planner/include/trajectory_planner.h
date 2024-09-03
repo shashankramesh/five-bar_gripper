@@ -52,7 +52,7 @@ class TrajectoryPlanner
   private:
     double t1, t2, v, a, u, sm, vm, Tm;
     double p1p2, pL1, pL2, pL, pt;
-    bool bpc_initialize = false;
+    bool bpc_initialize = false, zero_path_length;
     Vector<double, 2> p12;
     Matrix<double, 2, 2> Rtheta1, Rtheta2, RthetaC;
     double theta1, theta2, thetaC;

@@ -637,7 +637,7 @@ int main(void)
   Matrix<double, 2, 6> dim_left_finger;
   Vector<double, 6> conf_feed_l, conf_cmd_l;
 
-  double phi_offset_l = -2.02255;
+  double phi_offset_l = -2.07074;//-2.02255;
   double psi_offset_l = -0.34228;
   int phi_sign_l = 1;
   int psi_sign_l = -1;
@@ -745,8 +745,8 @@ int main(void)
 
   pI_r << 0.02, 0.05;
   pI_l << -0.02, 0.05;
-  pF_r << 0.01, 0.05;
-  pF_l << -0.01, 0.05;
+  pF_r << 0.005, 0.05;
+  pF_l << -0.005, 0.05;
 
   path_time_r = 2;
   path_time_l = 2;
@@ -781,6 +781,7 @@ int main(void)
 
   F_r << -10, 0;
   F_l << 10, 0;
+  hold_time = 6;
 
   gripp(pF_r, pF_l, F_r, F_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 

@@ -3,36 +3,46 @@
 // TODO: Acceleration cap
 bool TrajectoryPlanner::initialize(double total_time, double max_velocity, double path_length)
 {
-	Tm = total_time;
-	vm = max_velocity;
-	sm = path_length;
-
-  double avsp = sm/Tm;
   bool st = true;
+  if (path_length >= 0.0001)
+	{
+    Tm = total_time;
+    vm = max_velocity;
+    sm = path_length;
 
-  if(vm < avsp)
-  {
-    v = avsp;
-    st = false;
-  }
-  else
-  {
-    if(vm > 2*avsp)
+    double avsp = sm/Tm;
+
+    if(vm < avsp)
     {
-      v = 2*avsp;
+      v = avsp;
       st = false;
     }
     else
     {
-      v = vm;
-      st = true;
+      if(vm > 2*avsp)
+      {
+        v = 2*avsp;
+        st = false;
+      }
+      else
+      {
+        v = vm;
+        st = true;
+      }
     }
+
+    t2 = sm/v;
+    t1 = Tm - t2;
+
+    a = v/t1;
+    
+    zero_path_length = false;
+
   }
-
-	t2 = sm/v;
-	t1 = Tm - t2;
-
-  a = v/t1;
+  else
+  {
+    zero_path_length = true;
+  }
 
   return st;
 }
@@ -57,30 +67,37 @@ double TrajectoryPlanner::initializeTTBPC(double sF, double freq)
 
 void TrajectoryPlanner::trapezoidalTrajectory(double time, double& s)
 {
-	if(time <= t1)
-	{
-		u = a*time*time/2;
-	}
-	else
-	{
-		if(time <= t2)
-		{
-			u = v*time - (v*v/(2*a));
-		}
-		else
-		{
-			if(time <= Tm)
-			{
-				u = (2*a*v*Tm - 2*v*v - a*a*(time-Tm)*(time-Tm))/(2*a);
-			}
-			else
-			{
-				u = sm;
-			}
-		}
-	}
+  if(zero_path_length)
+  {
+    s = 0;
+  }
+  else
+  {
+    if(time <= t1)
+    {
+      u = a*time*time/2;
+    }
+    else
+    {
+      if(time <= t2)
+      {
+        u = v*time - (v*v/(2*a));
+      }
+      else
+      {
+        if(time <= Tm)
+        {
+          u = (2*a*v*Tm - 2*v*v - a*a*(time-Tm)*(time-Tm))/(2*a);
+        }
+        else
+        {
+          u = sm;
+        }
+      }
+    }
 
-	s = u/sm;
+    s = u/sm;
+  }
 }
 
 void TrajectoryPlanner::trapezoidalTrajectoryBPC(double t, double& s)

@@ -15,7 +15,7 @@
 
 using namespace std::chrono;
 
-ofstream log_file("../verify_codes/test.csv");
+ofstream log_file("../verify_codes/test_sense_only_motors.csv");
 
 double phi_cmd_l, phi_feed_l;
 double psi_cmd_l, psi_feed_l;
@@ -272,7 +272,7 @@ void p2p(double joint_ini_right_finger[2], double joint_fin_right_finger[2], dou
     cmds[0].position = psim_cmd_r;
     cmds[3].position = phim_cmd_l;
     cmds[2].position = psim_cmd_l; //TODO: check these
-
+    
     // Uncommet to run
     pi3_interface.write(cmds);
 
@@ -373,7 +373,7 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
     if(time <= total_time_l)
     {
       ni_l = int(floor(time/path_time_l));
-      traj_l.trapezoidalTrajectory(time - ni_r*path_time_r, s_l);
+      traj_l.trapezoidalTrajectory(time - ni_l*path_time_l, s_l);
     }
       
     if(ni_r % 2 == 0)
@@ -402,8 +402,8 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
     cmds[1].position = phim_cmd_r;
     cmds[0].position = psim_cmd_r;
     cmds[3].position = phim_cmd_l;
-    cmds[2].position = psim_cmd_l; //TODO: check these
-
+    cmds[2].position = psim_cmd_l;
+    
     // Uncommet to run
     pi3_interface.write(cmds);
 
@@ -660,7 +660,7 @@ int main(void)
   Matrix<double, 2, 6> dim_left_finger;
   Vector<double, 6> conf_feed_l, conf_cmd_l;
 
-  double phi_offset_l = -2.02255;
+  double phi_offset_l = -2.07074;//-2.02255; //check
   double psi_offset_l = -0.34228;
   int phi_sign_l = 1;
   int psi_sign_l = -1;
@@ -728,7 +728,6 @@ int main(void)
   
   Vector<double, 2> torque_r, F_r;
   Vector<double, 2> torque_l, F_l;
-  double hold_time = 2;
 
   // Start all motors in stopped mode to clear all faults
   pi3_interface.stop();
@@ -752,21 +751,17 @@ int main(void)
 
   //linear_motion(pI_r, pF_r, pm_r, path_time_r, n_r, pI_l, pF_l, pm_l, path_time_l, n_l, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
-  //std::cout << "output mode switch" << std::endl;
-
-  //output_mode_switch("gripp", right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
-
-  pI_r_gripp << 0.02, 0.05;
-  pI_l_gripp << -0.02, 0.05;
-  pF_r_gripp << 0.01, 0.05;
-  pF_l_gripp << -0.01, 0.05;
+  pI_r_gripp << 0.02, 0.04;
+  pF_r_gripp << -0.01, 0.04;
+  pI_l_gripp << -0.02, 0.04;
+  pF_l_gripp << -0.02, 0.04;
 
   pI_r_sense << 0.04, 0.04;
-  pF_r_sense << 0.01, 0.04;
+  pF_r_sense << -0.01, 0.04;
   pI_l_sense << -0.04, 0.04;
   pF_l_sense << -0.04, 0.04;
 
-  double sense_time = 4;
+  double sense_time = 8;
 
   std::cout << "sense" << std::endl;
 
@@ -795,12 +790,25 @@ int main(void)
 
   p2p(joint_ini_right_finger, joint_fin_right_finger, joint_ini_left_finger, joint_fin_left_finger, p2p_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
-  //std::cout << "hold" << endl;
+  std::cout << "hold" << endl;
 
-  //torque_r << 0, 0;
-  //torque_l << 0, 0;
+  torque_r << 0, 0;
+  torque_l << 0, 0;
+  double hold_time = 10;
 
   //hold(torque_r, torque_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+
+  std::cout << "output mode switch" << std::endl;
+
+  output_mode_switch("gripp", right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+
+  std::cout << "hold" << endl;
+
+  hold(torque_r, torque_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+
+  std::cout << "sense" << std::endl;
+
+  sense(pI_r_gripp, pF_r_gripp, pI_l_gripp, pF_l_gripp, sense_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
   //std::cout << "gripp" << endl;
 
@@ -809,9 +817,9 @@ int main(void)
 
   //gripp(pI_r, pI_l, F_r, F_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
-  //std::cout << "output mode switch" << std::endl;
+  std::cout << "output mode switch" << std::endl;
 
-  //output_mode_switch("sense", right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+  output_mode_switch("sense", right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
   updateCurrentPos(left_finger_kinematics, right_finger_kinematics, pi3_interface, cmds, resp);
   
