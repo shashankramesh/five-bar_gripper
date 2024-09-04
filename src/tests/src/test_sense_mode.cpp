@@ -15,7 +15,7 @@
 
 using namespace std::chrono;
 
-ofstream log_file("../verify_codes/log/sense_right_finger_no_object_240903.csv");
+ofstream log_file("../verify_codes/log/sense_right_finger_19inch5_brass_rod.csv");
 
 double phi_cmd_l, phi_feed_l;
 double psi_cmd_l, psi_feed_l;
