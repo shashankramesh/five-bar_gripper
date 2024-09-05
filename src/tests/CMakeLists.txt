@@ -41,6 +41,15 @@ add_executable(test_gripp_mode
   )
 target_link_libraries(test_gripp_mode m pthread bcm_host)
 
+
+add_executable(test_gripp_mode_v2
+  src/test_gripp_mode_v2.cpp
+  ../trajectory_planner/src/trajectory_planner.cpp
+  ../pi3hat/pi3hat.cc
+  ../pi3hat/pi3hat_interface.cpp
+  )
+target_link_libraries(test_gripp_mode_v2 m pthread bcm_host)
+
 add_executable(test_sense_mode
   src/test_sense_mode.cpp
   ../trajectory_planner/src/trajectory_planner.cpp
@@ -48,6 +57,14 @@ add_executable(test_sense_mode
   ../pi3hat/pi3hat_interface.cpp
   )
 target_link_libraries(test_sense_mode m pthread bcm_host)
+
+add_executable(test_sense_object
+  src/test_sense_object.cpp
+  ../trajectory_planner/src/trajectory_planner.cpp
+  ../pi3hat/pi3hat.cc
+  ../pi3hat/pi3hat_interface.cpp
+  )
+target_link_libraries(test_sense_object m pthread bcm_host)
 
 #add_executable(test_max_loading
 #  src/test_max_loading.cpp
