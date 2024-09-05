@@ -147,8 +147,8 @@ void torque_hold(Vector<double, 2> torque_r, Vector<double, 2> torque_l, double 
 
   bool torque_escape_flag = false;
 
-  double phi_pos_tol = 5.*M_PI/180.;
-  double psi_pos_tol = 20.*M_PI/180.;
+  double phi_pos_tol = 10.*M_PI/180.;
+  double psi_pos_tol = 10.*M_PI/180.;
 
   auto ti = high_resolution_clock::now();
   auto timeD = duration_cast<microseconds>(high_resolution_clock::now() - ti);
@@ -1042,8 +1042,8 @@ int main(void)
 
   std::cout << "gripp" << endl;
 
-  F_r << 5, 0;
-  F_l << -5, 0;
+  F_r << -5, 0;
+  F_l << 5, 0;
   hold_time = 6;
 
   gripp(pF_r, pF_l, F_r, F_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);

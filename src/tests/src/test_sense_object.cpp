@@ -794,8 +794,8 @@ int main(void)
 
   pI_r_sense << 0.04, 0.04;
   pF_r_sense << -0.01, 0.04;
-  pI_l_sense << -0.04, 0.04;
-  pF_l_sense << -0.04, 0.04;
+  pI_l_sense << -0.04, 0.03;
+  pF_l_sense << -0.04, 0.03;
 
   double sense_time = 8;
 

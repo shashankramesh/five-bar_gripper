@@ -66,6 +66,22 @@ add_executable(test_sense_object
   )
 target_link_libraries(test_sense_object m pthread bcm_host)
 
+add_executable(test_stiffness_UTM
+  src/test_stiffness_UTM.cpp
+  ../trajectory_planner/src/trajectory_planner.cpp
+  ../pi3hat/pi3hat.cc
+  ../pi3hat/pi3hat_interface.cpp
+  )
+target_link_libraries(test_stiffness_UTM m pthread bcm_host)
+
+add_executable(test_force
+  src/test_force.cpp
+  ../trajectory_planner/src/trajectory_planner.cpp
+  ../pi3hat/pi3hat.cc
+  ../pi3hat/pi3hat_interface.cpp
+  )
+target_link_libraries(test_force m pthread bcm_host)
+
 #add_executable(test_max_loading
 #  src/test_max_loading.cpp
 #  ../trajectory_planner/src/trajectory_planner.cpp
