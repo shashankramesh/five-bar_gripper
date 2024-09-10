@@ -15,7 +15,7 @@
 
 using namespace std::chrono;
 
-ofstream log_file("../verify_codes/test.csv");
+ofstream log_file("../verify_codes/sense_mode_gripp_UTM_horizontal gripper.csv");
 
 double phi_cmd_l, phi_feed_l;
 double psi_cmd_l, psi_feed_l;
@@ -390,7 +390,7 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
     
     if(move_until_gripp)
     {
-      if (abs(phi_torque_r) <= 0.3 && abs(psi_torque_r) <= 0.3 && abs(phi_torque_l) <= 0.3 && abs(psi_torque_l) <= 0.3)
+      if (abs(phi_torque_r) <= 0.15 && abs(psi_torque_r) <= 0.15 && abs(phi_torque_l) <= 0.15 && abs(psi_torque_l) <= 0.15)
       {
         if(time <= total_time_r)
         {
@@ -772,7 +772,7 @@ int main(void)
   
   Vector<double, 2> torque_r, F_r;
   Vector<double, 2> torque_l, F_l;
-  double hold_time = 4;
+  double hold_time = 2.5;
 
   // Start all motors in stopped mode to clear all faults
   pi3_interface.stop();
