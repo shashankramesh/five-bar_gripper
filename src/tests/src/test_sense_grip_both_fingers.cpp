@@ -15,7 +15,7 @@
 
 using namespace std::chrono;
 
-ofstream log_file("../verify_codes/log/sense_right_finger_UTM_horizontal_gripper.csv");
+ofstream log_file("../verify_codes/log/test.csv");
 
 double phi_cmd_l, phi_feed_l;
 double psi_cmd_l, psi_feed_l;
@@ -326,11 +326,13 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
   pd_r = pF_r - pI_r;
   pd_l = pF_l - pI_l;
   
-  bool sense_flag = false;
+  bool sense_flag_r = false;
+  bool sense_flag_l = false;
   bool first_iter = true;
   
   double expFiltalpha = 0.1;
   double right_finger_phi_torque = 0;
+  double left_finger_phi_torque = 0;
 
   double phim_cmd_l, phim_feed_l;
   double psim_cmd_l, psim_feed_l;
@@ -373,33 +375,43 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
     if(first_iter)
     {
       right_finger_phi_torque = resp[1].torque;
+      left_finger_phi_torque = resp[3].torque;
       first_iter = false;
     }
     else
     {
       right_finger_phi_torque = expFiltalpha*resp[1].torque + (1-expFiltalpha)*right_finger_phi_torque;
+      left_finger_phi_torque = expFiltalpha*resp[3].torque + (1-expFiltalpha)*left_finger_phi_torque;
     }
     
-    cout << right_finger_phi_torque << endl;
+    //cout << right_finger_phi_torque << endl;
 
     if(move_until_sense && right_finger_phi_torque <= sense_torque_threshold)
-      sense_flag = true;
+      sense_flag_r = true;
+
+    if(move_until_sense && left_finger_phi_torque <= sense_torque_threshold)
+      sense_flag_l = true;
     
     right_finger_kinematics.getRelativeAngles(phim_feed_r, psim_feed_r, phi_feed_r, psi_feed_r);
     left_finger_kinematics.getRelativeAngles(phim_feed_l, psim_feed_l, phi_feed_l, psi_feed_l);
 
-    if(!sense_flag)
+    if(!sense_flag_r)
     {
       if(time <= total_time_r)
       {
         ni_r = int(floor(time/path_time_r));
         traj_r.trapezoidalTrajectory(time - ni_r*path_time_r, s_r);
       }
+    }
+
+    if(!sense_flag_l)
+    {
       if(time <= total_time_l)
       {
         ni_l = int(floor(time/path_time_l));
         traj_l.trapezoidalTrajectory(time - ni_l*path_time_l, s_l);
       }
+
     }
       
     if(ni_r % 2 == 0)
@@ -470,8 +482,10 @@ void linear_motion(Vector<double, 2>& pI_r, Vector<double, 2>& pF_r, double pm_r
       
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
-  if(sense_flag)
-    cout << "Contact detected" << endl;
+  if(sense_flag_r)
+    cout << "Right finger contact detected" << endl;
+  if(sense_flag_l)
+    cout << "Left finger contact detected" << endl;
 } 
 
 void updateCurrentPos(FiveBarKinematics& left_finger_kinematics, FiveBarKinematics& right_finger_kinematics, Pi3HatInterface& pi3_interface, 
@@ -547,8 +561,8 @@ void output_mode_switch(const char* op_mode, FiveBarKinematics& right_finger_kin
     
     joint_fin_right_finger[0] = stod(phi_r);
     joint_fin_right_finger[1] = stod(psi_r);
-    joint_fin_left_finger[0] = phi_cmd_l;//stod(phi_l);
-    joint_fin_left_finger[1] = psi_cmd_l;//stod(psi_l);
+    joint_fin_left_finger[0] = stod(phi_l);
+    joint_fin_left_finger[1] = stod(psi_l);
     
     cout << "phi_r: " << joint_fin_right_finger[0] << ", psi_r: " << joint_fin_right_finger[1]
          << ", phi_l: " << joint_fin_left_finger[0] << ", psi_l: " << joint_fin_left_finger[1] << endl;
@@ -567,21 +581,21 @@ void output_mode_switch(const char* op_mode, FiveBarKinematics& right_finger_kin
   {
     pm_r[0] = -1;
     pm_r[1] = 1;  
-    //pm_l[0] = 1;
-    //pm_l[1] = -1;
+    pm_l[0] = 1;
+    pm_l[1] = -1;
     right_finger_kinematics.addIKAngleOffsets(2*M_PI, 0);
-    //left_finger_kinematics.addIKAngleOffsets(-2*M_PI, 0);
-    sense_torque_threshold = -0.028;
+    left_finger_kinematics.addIKAngleOffsets(-2*M_PI, 0);
+    sense_torque_threshold = -0.15;
   }
   else
   {
     pm_r[0] = 1;
     pm_r[1] = -1;  
-    //pm_l[0] = -1;
-    //pm_l[1] = 1;
+    pm_l[0] = -1;
+    pm_l[1] = 1;
     right_finger_kinematics.addIKAngleOffsets(-2*M_PI, 0);
-    //left_finger_kinematics.addIKAngleOffsets(2*M_PI, 0);
-    sense_torque_threshold = -0.018;
+    left_finger_kinematics.addIKAngleOffsets(2*M_PI, 0);
+    sense_torque_threshold = -0.07;
   }
 
 }
@@ -787,21 +801,21 @@ int main(void)
 
   //linear_motion(pI_r, pF_r, pm_r, path_time_r, n_r, pI_l, pF_l, pm_l, path_time_l, n_l, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
-  pI_r_gripp << 0.02, 0.04;
-  pF_r_gripp << -0.01, 0.04;
-  //pI_l_gripp << -0.02, 0.04;
-  //pF_l_gripp << -0.02, 0.04;
+  pI_r_gripp << 0.025, 0.04;
+  pF_r_gripp << 0.0, 0.04;
+  pI_l_gripp << -0.025, 0.04;
+  pF_l_gripp << -0.0, 0.04;
 
   pI_r_sense << 0.04, 0.04;
-  pF_r_sense << -0.01, 0.04;
-  pI_l_sense << -0.04, 0.03;
-  pF_l_sense << -0.04, 0.03;
+  pF_r_sense << 0.01, 0.04;
+  pI_l_sense << -0.04, 0.04;
+  pF_l_sense << -0.01, 0.04;
 
-  double sense_time = 2;
+  double sense_time = 1;
 
   std::cout << "sense" << std::endl;
 
-  sense(pI_r_sense, pF_r_sense, pI_l_sense, pF_l_sense, sense_time, 1, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+  sense(pI_r_sense, pF_r_sense, pI_l_sense, pF_l_sense, sense_time, 5, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
   right_finger_kinematics.inverseKinematics(pI_r_sense, pm_r[0], pm_r[1], conf_cmd_r);
   left_finger_kinematics.inverseKinematics(pI_l_sense, pm_l[0], pm_l[1], conf_cmd_l);
@@ -822,15 +836,19 @@ int main(void)
   joint_fin_left_finger[1] = conf_cmd_l(1);
   p2p_time = 3;*/
 
+  torque_r << 0, 0;
+  torque_l << 0, 0;
+  double hold_time = 10;
+
+  cout << "hold" << endl;
+
+  hold(torque_r, torque_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+
   std::cout << "p2p" << std::endl;
 
   p2p(joint_ini_right_finger, joint_fin_right_finger, joint_ini_left_finger, joint_fin_left_finger, p2p_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
   //std::cout << "hold" << endl;
-
-  torque_r << 0, 0;
-  torque_l << 0, 0;
-  double hold_time = 5;
 
   //hold(torque_r, torque_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
@@ -842,7 +860,11 @@ int main(void)
 
   std::cout << "sense" << std::endl;
 
-  sense(pI_r_gripp, pF_r_gripp, pI_l_sense, pF_l_sense, sense_time, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+  sense(pI_r_gripp, pF_r_gripp, pI_l_gripp, pF_l_gripp, sense_time, 4, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
+
+  cout << "hold" << endl;
+
+  hold(torque_r, torque_l, hold_time, right_finger_kinematics, left_finger_kinematics, pi3_interface, cmds, resp);
 
   //std::cout << "gripp" << endl;
 

@@ -90,6 +90,14 @@ add_executable(test_sense_gripp
   )
 target_link_libraries(test_sense_gripp m pthread bcm_host)
 
+add_executable(test_sense_grip_both_fingers
+  src/test_sense_grip_both_fingers.cpp
+  ../trajectory_planner/src/trajectory_planner.cpp
+  ../pi3hat/pi3hat.cc
+  ../pi3hat/pi3hat_interface.cpp
+  )
+target_link_libraries(test_sense_grip_both_fingers m pthread bcm_host)
+
 #add_executable(test_max_loading
 #  src/test_max_loading.cpp
 #  ../trajectory_planner/src/trajectory_planner.cpp
